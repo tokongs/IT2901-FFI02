@@ -9,6 +9,10 @@ jobs:
   check:
     name: Check code for bugs and run tests
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: broker
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
