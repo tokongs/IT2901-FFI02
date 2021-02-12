@@ -1,15 +1,19 @@
 # We use multi-stage here to unzip in an initial layer so we don't have to COPY and then RUN unzip (two layers). ADD can lead to larger layers as well.
-FROM busybox AS unzip
+FROM gradle:6.8.2-jdk11 AS build
 
-ARG HIVEMQ_VERSION=2019.1
+WORKDIR /home/gradle/broker
+RUN git clone https://github.com/hivemq/hivemq-extension-sdk.git ../hivemq-extension-sdk
 
-COPY hivemq-ce-${HIVEMQ_VERSION}.zip /
+COPY build.gradle .
+COPY gradle.properties .
+COPY settings.gradle .
+COPY src src
 
-RUN unzip /hivemq-ce-${HIVEMQ_VERSION}.zip
+RUN gradle packaging
 
 FROM openjdk:11-jre-slim
 
-ARG HIVEMQ_VERSION=2019.1
+ARG HIVEMQ_VERSION=2021.1
 
 ENV HIVEMQ_GID=10000
 ENV HIVEMQ_UID=10000
@@ -40,11 +44,11 @@ RUN set -x \
         && gosu nobody true \
         && apt-get purge -y gpg dirmngr && rm -rf /var/lib/apt/lists/*
 
-COPY config.xml /opt/config.xml
-COPY docker-entrypoint.sh /opt/docker-entrypoint.sh
+COPY ./docker/config.xml /opt/config.xml
+COPY ./docker/docker-entrypoint.sh /opt/docker-entrypoint.sh
 
 # HiveMQ setup
-COPY --from=unzip /hivemq-ce-${HIVEMQ_VERSION} /opt/hivemq-ce-${HIVEMQ_VERSION}
+COPY --from=build /home/gradle/broker/build/package/hivemq-ce-${HIVEMQ_VERSION} /opt/hivemq-ce-${HIVEMQ_VERSION}
 RUN ln -s /opt/hivemq-ce-${HIVEMQ_VERSION} /opt/hivemq \
     && mv /opt/config.xml /opt/hivemq/conf/config.xml \
     && groupadd --gid ${HIVEMQ_GID} hivemq \
