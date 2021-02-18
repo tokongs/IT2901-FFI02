@@ -1,4 +1,4 @@
-name: Broker CI
+name: Client CI
 on:
   pull_request:
     branches: [ main ]
@@ -23,7 +23,7 @@ jobs:
     - name: Check tests and spot bugs
       run: ./gradlew check
   build:
-    name: Build the broker
+    name: Build the client
     runs-on: ubuntu-latest
     defaults:
       run:
