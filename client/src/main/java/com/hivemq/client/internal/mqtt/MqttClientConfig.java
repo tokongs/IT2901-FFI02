@@ -16,6 +16,8 @@
 
 package com.hivemq.client.internal.mqtt;
 
+import com.hivemq.client.extensions.PriorityClass;
+import com.hivemq.client.extensions.TopicPriority;
 import com.hivemq.client.internal.mqtt.advanced.MqttClientAdvancedConfig;
 import com.hivemq.client.internal.mqtt.datatypes.MqttClientIdentifierImpl;
 import com.hivemq.client.internal.mqtt.ioc.ClientComponent;
@@ -28,6 +30,7 @@ import com.hivemq.client.internal.util.collections.ImmutableList;
 import com.hivemq.client.mqtt.MqttClientState;
 import com.hivemq.client.mqtt.MqttVersion;
 import com.hivemq.client.mqtt.datatypes.MqttClientIdentifier;
+import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
 import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
 import com.hivemq.client.mqtt.lifecycle.MqttClientConnectedListener;
 import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedListener;
@@ -57,7 +60,7 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
     private final @NotNull ConnectDefaults connectDefaults;
     private final @NotNull ImmutableList<MqttClientConnectedListener> connectedListeners;
     private final @NotNull ImmutableList<MqttClientDisconnectedListener> disconnectedListeners;
-
+    private final @NotNull ImmutableList<TopicPriority> priorities;
     private final @NotNull ClientComponent clientComponent;
 
     private volatile @Nullable EventLoop eventLoop;
@@ -79,7 +82,7 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
             final @NotNull MqttClientAdvancedConfig advancedConfig,
             final @NotNull ConnectDefaults connectDefaults,
             final @NotNull ImmutableList<MqttClientConnectedListener> connectedListeners,
-            final @NotNull ImmutableList<MqttClientDisconnectedListener> disconnectedListeners) {
+            final @NotNull ImmutableList<MqttClientDisconnectedListener> disconnectedListeners, @NotNull ImmutableList<TopicPriority> priorities) {
 
         this.mqttVersion = mqttVersion;
         this.clientIdentifier = clientIdentifier;
@@ -89,6 +92,7 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
         this.connectDefaults = connectDefaults;
         this.connectedListeners = connectedListeners;
         this.disconnectedListeners = disconnectedListeners;
+        this.priorities = priorities;
 
         clientComponent = SingletonComponent.INSTANCE.clientComponentBuilder().clientConfig(this).build();
 

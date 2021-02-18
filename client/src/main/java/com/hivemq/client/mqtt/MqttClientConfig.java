@@ -50,6 +50,7 @@ public interface MqttClientConfig {
      */
     @NotNull Optional<MqttClientIdentifier> getClientIdentifier();
 
+
     /**
      * @return the server address the client connects to.
      * @since 1.1
