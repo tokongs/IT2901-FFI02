@@ -59,24 +59,6 @@ public class MqttEncoder extends ChannelDuplexHandler {
         context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
     }
 
-    public void setTos(final @NotNull ChannelHandlerContext ctx, final @NotNull Object msg){
-        MqttTopic topic = null;
-        if(msg instanceof MqttPublish) {
-            topic = ((MqttPublish) msg).getTopic();
-        } else if(msg instanceof MqttStatefulPublish){
-            topic = ((MqttStatefulPublish) msg).stateless().getTopic();
-        }
-
-        if(topic == null) return;
-        final SocketChannelConfig config = ((SocketChannelConfig) ctx.channel().config());
-
-        if(MqttTopicFilter.builder().addLevel("testtopic").singleLevelWildcard().build().matches(topic)){
-            config.setTrafficClass(0x10);
-        } else {
-            config.setTrafficClass(0x0);
-        }
-    }
-
     @Override
     public void write(
             final @NotNull ChannelHandlerContext ctx,
@@ -85,8 +67,6 @@ public class MqttEncoder extends ChannelDuplexHandler {
 
         if (msg instanceof MqttMessage) {
             final MqttMessage message = (MqttMessage) msg;
-
-            setTos(ctx, message);
 
             final MqttMessageEncoder<?> messageEncoder = encoders.get(message.getType().getCode());
             if (messageEncoder == null) {

@@ -12,4 +12,12 @@ public class TopicPriority {
         this.filter = filter;
         this.priority = priority;
     }
+
+    public MqttTopicFilter getTopicFilter(){
+        return filter;
+    }
+
+    public PriorityClass getPriorityClass(){
+        return priority;
+    }
 }

@@ -60,7 +60,7 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
     private final @NotNull ConnectDefaults connectDefaults;
     private final @NotNull ImmutableList<MqttClientConnectedListener> connectedListeners;
     private final @NotNull ImmutableList<MqttClientDisconnectedListener> disconnectedListeners;
-    private final @NotNull ImmutableList<TopicPriority> priorities;
+    private final @NotNull ImmutableList<TopicPriority> topicPriorities;
     private final @NotNull ClientComponent clientComponent;
 
     private volatile @Nullable EventLoop eventLoop;
@@ -92,12 +92,17 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
         this.connectDefaults = connectDefaults;
         this.connectedListeners = connectedListeners;
         this.disconnectedListeners = disconnectedListeners;
-        this.priorities = priorities;
+        this.topicPriorities = priorities;
 
         clientComponent = SingletonComponent.INSTANCE.clientComponentBuilder().clientConfig(this).build();
 
         state = new AtomicReference<>(MqttClientState.DISCONNECTED);
         currentTransportConfig = transportConfig;
+    }
+
+    @Override
+    public @NotNull ImmutableList<TopicPriority> getTopicPriorities() {
+        return topicPriorities;
     }
 
     @Override

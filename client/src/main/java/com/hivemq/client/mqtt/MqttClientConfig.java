@@ -18,6 +18,8 @@ package com.hivemq.client.mqtt;
 
 import com.hivemq.client.annotations.DoNotImplement;
 import com.hivemq.client.annotations.Immutable;
+import com.hivemq.client.extensions.TopicPriority;
+import com.hivemq.client.internal.util.collections.ImmutableList;
 import com.hivemq.client.mqtt.datatypes.MqttClientIdentifier;
 import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
 import com.hivemq.client.mqtt.lifecycle.MqttClientConnectedListener;
@@ -36,6 +38,8 @@ import java.util.Optional;
  */
 @DoNotImplement
 public interface MqttClientConfig {
+
+    @NotNull ImmutableList<TopicPriority> getTopicPriorities();
 
     /**
      * @return the MQTT version of the client.
