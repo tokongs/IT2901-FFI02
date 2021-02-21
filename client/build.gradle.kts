@@ -202,7 +202,7 @@ tasks.shadowJar {
 
 /* ******************** publishing ******************** */
 
-apply("${rootDir}/gradle/publishing.gradle.kts")
+apply("${projectDir}/gradle/publishing.gradle.kts")
 
 allprojects {
     plugins.withId("java-library") {
@@ -272,8 +272,8 @@ allprojects {
         plugins.apply("com.jfrog.bintray")
 
         bintray {
-            user = "${rootProject.extra["bintray_username"]}"
-            key = "${rootProject.extra["bintray_apiKey"]}"
+            user = "${project.extra["bintray_username"]}"
+            key = "${project.extra["bintray_apiKey"]}"
             publish = true
             pkg.apply {
                 userOrg = "hivemq"
@@ -313,7 +313,7 @@ allprojects {
 }
 
 githubRelease {
-    token("${rootProject.extra["github_token"]}")
+    token("${project.extra["github_token"]}")
     owner.set(metadata.github.org)
     repo.set(metadata.github.repo)
     targetCommitish.set("master")
@@ -344,7 +344,7 @@ allprojects {
     }
 }
 
-apply("${rootDir}/gradle/japicc.gradle.kts")
+apply("${projectDir}/gradle/japicc.gradle.kts")
 
 
 /* ******************** build cache ******************** */

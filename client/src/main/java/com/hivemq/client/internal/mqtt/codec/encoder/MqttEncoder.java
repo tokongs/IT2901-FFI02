@@ -19,11 +19,16 @@ package com.hivemq.client.internal.mqtt.codec.encoder;
 import com.hivemq.client.internal.mqtt.MqttClientConnectionConfig;
 import com.hivemq.client.internal.mqtt.ioc.ConnectionScope;
 import com.hivemq.client.internal.mqtt.message.MqttMessage;
+import com.hivemq.client.internal.mqtt.message.publish.MqttPublish;
+import com.hivemq.client.internal.mqtt.message.publish.MqttStatefulPublish;
+import com.hivemq.client.mqtt.datatypes.MqttTopic;
+import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
+import io.netty.channel.socket.SocketChannelConfig;
 import org.jetbrains.annotations.NotNull;
 
 import javax.inject.Inject;
@@ -62,6 +67,7 @@ public class MqttEncoder extends ChannelDuplexHandler {
 
         if (msg instanceof MqttMessage) {
             final MqttMessage message = (MqttMessage) msg;
+
             final MqttMessageEncoder<?> messageEncoder = encoders.get(message.getType().getCode());
             if (messageEncoder == null) {
                 throw new UnsupportedOperationException();
