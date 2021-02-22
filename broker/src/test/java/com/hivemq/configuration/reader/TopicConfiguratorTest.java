@@ -17,9 +17,9 @@ public class TopicConfiguratorTest extends AbstractConfigurationTest {
         final String contents =
                 "<hivemq>" +
                         " <mqtt>\n" +
-                        "<packets> " +
-                        "<max-packet-size>" + maxTopics + "</max-packet-size> " +
-                        "</packets> " +
+                        "<topics> " +
+                        "<max-topics>" + maxTopics + "</max-topics> " +
+                        "</topics> " +
                         "</mqtt>\n" +
                         "</hivemq>";
         Files.write(contents.getBytes(UTF_8), xmlFile);

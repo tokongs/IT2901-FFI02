@@ -17,10 +17,7 @@ package com.hivemq.configuration.reader;
 
 import com.hivemq.configuration.info.SystemInformation;
 import com.hivemq.configuration.info.SystemInformationImpl;
-import com.hivemq.configuration.service.MqttConfigurationService;
-import com.hivemq.configuration.service.PersistenceConfigurationService;
-import com.hivemq.configuration.service.RestrictionsConfigurationService;
-import com.hivemq.configuration.service.SecurityConfigurationService;
+import com.hivemq.configuration.service.*;
 import com.hivemq.configuration.service.impl.MqttConfigurationServiceImpl;
 import com.hivemq.configuration.service.impl.PersistenceConfigurationServiceImpl;
 import com.hivemq.configuration.service.impl.RestrictionsConfigurationServiceImpl;
@@ -59,6 +56,11 @@ public class AbstractConfigurationTest {
     SystemInformation systemInformation;
     PersistenceConfigurationService persistenceConfigurationService;
 
+    /**
+     *  Added by Christoffer Stensrud
+     */
+    TopicConfigurationService topicConfigurationService;
+
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
@@ -82,7 +84,12 @@ public class AbstractConfigurationTest {
                 new UsageStatisticsConfigurator(usageStatisticsConfig),
                 new MqttConfigurator(mqttConfigurationService),
                 new ListenerConfigurator(listenerConfigurationService, systemInformation),
-                new PersistenceConfigurator(persistenceConfigurationService));
+                new PersistenceConfigurator(persistenceConfigurationService),
+
+                /**
+                 *  Added by Christoffer Stensrud
+                 */
+                new TopicConfigurator((topicConfigurationService)));
     }
 
 }
