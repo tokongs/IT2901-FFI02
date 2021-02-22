@@ -56,11 +56,19 @@ public class MqttEncoder extends ChannelDuplexHandler {
         context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
     }
 
-    public void setToS(final SocketChannelConfig cnf,
+    public void setTOS(final SocketChannelConfig cnf,
                        Either<MqttPublish, MqttStatefulPublish> msg) {
-      MqttTopicImpl topic = msg.isLeft() ? msg.getTopic() : msg.stateless().getTopic;
-      return;
-        
+      TopicPriority priority = msg.isLeft() ? msg.getTopic() : msg.stateless().getPriority;
+
+      int prevTOS = cnf.getTrafficClass();
+      swith (priority) {
+        //Shift once left, as least significant bit is reserved for something else,
+        //Or with mask in order to preserve information in most significant bits
+        case PriorityClass.ROUTINE   : cnf.setTrafficClass(prevTOS | 0 << 1); break;
+        case PriorityClass.PRIORITY  : cnf.setTrafficClass(prevTOS | 1 << 1); break;
+        case PriorityClass.IMMEDIATE : cnf.setTrafficClass(prevTOS | 2 << 1); break;
+        case PriorityClass.FLASH     : cnf.setTrafficClass(prevTOS | 3 << 1); break;
+        default: cnf.setTrafficClass(prevTOS | 0 << 1);
 
     @Override
     public void write(
@@ -72,6 +80,7 @@ public class MqttEncoder extends ChannelDuplexHandler {
 
         if (msg instanceof MqttMessage) {
             final MqttMessage message = (MqttMessage) msg;
+            message.setTOS(ctx, msg)
             final MqttMessageEncoder<?> messageEncoder = encoders.get(message.getType().getCode());
             if (messageEncoder == null) {
                 throw new UnsupportedOperationException();
