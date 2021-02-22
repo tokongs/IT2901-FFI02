@@ -11,9 +11,9 @@ public class TopicConfiguratorTest extends AbstractConfigurationTest {
 
 
     @Test
-    public void test_max_topics() throws Exception {
+    public void test_topics_xml() throws Exception {
 
-        final int maxTopics = 8;
+        final int maxTopics = 255;
         final String contents =
                 "<hivemq>" +
                         " <mqtt>\n" +
@@ -27,5 +27,18 @@ public class TopicConfiguratorTest extends AbstractConfigurationTest {
         reader.applyConfig();
 
         assertEquals(maxTopics, topicConfigurationService.maxTopics());
+    }
+
+    @Test
+    public void test_topics_defaults() throws Exception {
+        final String contents =
+                "<hivemq>" +
+                "</hivemq>";
+
+        Files.write(contents.getBytes(UTF_8), xmlFile);
+
+        reader.applyConfig();
+
+        assertEquals(8, topicConfigurationService.maxTopics());
     }
 }

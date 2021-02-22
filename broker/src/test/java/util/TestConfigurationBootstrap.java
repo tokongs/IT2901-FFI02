@@ -51,7 +51,7 @@ public class TestConfigurationBootstrap {
                 restrictionsConfigurationService,
                 securityConfigurationService,
                 usageStatisticsConfig,
-                persistenceConfigurationService);
+                persistenceConfigurationService, new TopicConfigurationServiceImpl());
     }
 
     public SecurityConfigurationService getSecurityConfigurationService() {
