@@ -65,10 +65,9 @@ public class MqttEncoder extends ChannelDuplexHandler {
     public void setTOS(final @NotNull ChannelHandlerContext ctx,
                        final @NotNull Object msg) {
 
-      TopicPriority priority = 
-        (msg instanceof MqttPublish) 
-        ? ((MqttPublish) msg).getTopic().getPriority() 
-        : ((MqttStatefulPublish) msg).getTopic().stateless().getPriority();
+      TopicPriority priority = (msg instanceof MqttPublish) 
+                             ? ((MqttPublish) msg).getTopic().getPriority() 
+                             : ((MqttStatefulPublish) msg).getTopic().stateless().getPriority();
 
       SocketChannelConfig config = (SocketChannelConfig) ctx.channel().config();
 
