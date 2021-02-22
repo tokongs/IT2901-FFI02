@@ -19,17 +19,19 @@ package com.hivemq.client.internal.mqtt.codec.encoder;
 import com.hivemq.client.internal.mqtt.MqttClientConnectionConfig;
 import com.hivemq.client.internal.mqtt.ioc.ConnectionScope;
 import com.hivemq.client.internal.mqtt.message.MqttMessage;
+import com.hivemq.client.internal.mqtt.message.MqttStatefulMessage;
 import com.hivemq.client.internal.mqtt.message.publish.MqttPublish;
 import com.hivemq.client.internal.mqtt.message.publish.MqttStatefulPublish;
 import com.hivemq.client.mqtt.datatypes.MqttTopic;
 import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
+import com.hivemq.client.extensions.PriorityClass;
+import com.hivemq.client.extensions.TopicPriority;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannelConfig;
 import io.netty.channel.ChannelPromise;
-import io.netty.channel.socket.SocketChannelConfig;
 import org.jetbrains.annotations.NotNull;
 
 import io.vavr.control.Either;
@@ -61,19 +63,24 @@ public class MqttEncoder extends ChannelDuplexHandler {
         context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
     }
 
-    public void setTOS(final SocketChannelConfig cnf,
+    public void setTOS(final ChannelHandlerContext ctx,
                        Either<MqttPublish, MqttStatefulPublish> msg) {
       TopicPriority priority = msg.isLeft() ? msg.getTopic() : msg.stateless().getPriority;
 
-      int prevTOS = cnf.getTrafficClass();
-      swith (priority) {
+      SocketChannelConfig config = (SocketChannelConfig) ctx.channel().config();
+
+      int prevTOS = config.getTrafficClass();
+
+      switch (priority.getPriorityClass()) {
         //Shift once left, as least significant bit is reserved for something else,
         //Or with mask in order to preserve information in most significant bits
-        case PriorityClass.ROUTINE   : cnf.setTrafficClass(prevTOS | 0 << 1); break;
-        case PriorityClass.PRIORITY  : cnf.setTrafficClass(prevTOS | 1 << 1); break;
-        case PriorityClass.IMMEDIATE : cnf.setTrafficClass(prevTOS | 2 << 1); break;
-        case PriorityClass.FLASH     : cnf.setTrafficClass(prevTOS | 3 << 1); break;
-        default: cnf.setTrafficClass(prevTOS | 0 << 1);
+        case ROUTINE   : config.setTrafficClass(prevTOS | 0 << 1); break;
+        case PRIORITY  : config.setTrafficClass(prevTOS | 1 << 1); break;
+        case IMMEDIATE : config.setTrafficClass(prevTOS | 2 << 1); break;
+        case FLASH     : config.setTrafficClass(prevTOS | 3 << 1); break;
+        default: config.setTrafficClass(prevTOS | 0 << 1);
+      }
+    }
 
     @Override
     public void write(
@@ -85,12 +92,12 @@ public class MqttEncoder extends ChannelDuplexHandler {
 
         if (msg instanceof MqttMessage) {
             final MqttMessage message = (MqttMessage) msg;
-            message.setTOS(ctx, msg)
             final MqttMessageEncoder<?> messageEncoder = encoders.get(message.getType().getCode());
             if (messageEncoder == null) {
                 throw new UnsupportedOperationException();
             }
             final ByteBuf out = messageEncoder.castAndEncode(message, context);
+            setTOS(ctx, msg);
             ctx.write(out, promise);
         } else {
             ctx.write(msg, promise);
