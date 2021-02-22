@@ -23,9 +23,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.socket.SocketChannelConfig;
 import io.netty.channel.ChannelPromise;
 import org.jetbrains.annotations.NotNull;
 
+import io.vavr.control.Either;
 import javax.inject.Inject;
 
 /**
@@ -54,9 +56,17 @@ public class MqttEncoder extends ChannelDuplexHandler {
         context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
     }
 
+    public void setToS(final SocketChannelConfig cnf,
+                       Either<MqttPublish, MqttStatefulPublish> msg) {
+      MqttTopicImpl topic = msg.isLeft() ? msg.getTopic() : msg.stateless().getTopic;
+      return;
+        
+
     @Override
     public void write(
+                      //final @NotNull SocketChannelConfig ctx,
             final @NotNull ChannelHandlerContext ctx,
+            //final @NotNull Either<MqttMessage, MqttStatefulMessage> msg,
             final @NotNull Object msg,
             final @NotNull ChannelPromise promise) {
 
