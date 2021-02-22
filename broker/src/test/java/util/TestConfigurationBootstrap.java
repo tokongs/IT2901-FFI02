@@ -15,10 +15,7 @@
  */
 package util;
 
-import com.hivemq.configuration.service.ConfigurationService;
-import com.hivemq.configuration.service.FullConfigurationService;
-import com.hivemq.configuration.service.PersistenceConfigurationService;
-import com.hivemq.configuration.service.SecurityConfigurationService;
+import com.hivemq.configuration.service.*;
 import com.hivemq.configuration.service.impl.*;
 import com.hivemq.configuration.service.impl.listener.ListenerConfigurationServiceImpl;
 import com.hivemq.statistics.UsageStatisticsConfig;
@@ -36,6 +33,7 @@ public class TestConfigurationBootstrap {
     private ConfigurationServiceImpl configurationService;
     private final UsageStatisticsConfig usageStatisticsConfig;
     private final PersistenceConfigurationService persistenceConfigurationService;
+    private final TopicConfigurationServiceImpl topicConfigurationService;
 
     public TestConfigurationBootstrap() {
         listenerConfigurationService = new ListenerConfigurationServiceImpl();
@@ -44,6 +42,7 @@ public class TestConfigurationBootstrap {
         securityConfigurationService = new SecurityConfigurationServiceImpl();
         usageStatisticsConfig = new UsageStatisticsConfigImpl();
         persistenceConfigurationService = new PersistenceConfigurationServiceImpl();
+        topicConfigurationService = new TopicConfigurationServiceImpl();
 
         configurationService = new ConfigurationServiceImpl(
                 listenerConfigurationService,
@@ -51,7 +50,8 @@ public class TestConfigurationBootstrap {
                 restrictionsConfigurationService,
                 securityConfigurationService,
                 usageStatisticsConfig,
-                persistenceConfigurationService, new TopicConfigurationServiceImpl());
+                persistenceConfigurationService,
+                topicConfigurationService);
     }
 
     public SecurityConfigurationService getSecurityConfigurationService() {
@@ -97,4 +97,5 @@ public class TestConfigurationBootstrap {
     public PersistenceConfigurationService getPersistenceConfigurationService() {
         return persistenceConfigurationService;
     }
+
 }
