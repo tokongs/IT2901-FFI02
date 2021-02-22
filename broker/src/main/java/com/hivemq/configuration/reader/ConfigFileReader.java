@@ -53,6 +53,8 @@ public class ConfigFileReader {
     private final @NotNull UsageStatisticsConfigurator usageStatisticsConfigurator;
     private final @NotNull PersistenceConfigurator persistenceConfigurator;
 
+    private final @NotNull TopicConfigurator topicConfigurator;
+
     public ConfigFileReader(
             @NotNull final ConfigurationFile configurationFile,
             @NotNull final RestrictionConfigurator restrictionConfigurator,
@@ -61,7 +63,9 @@ public class ConfigFileReader {
             @NotNull final UsageStatisticsConfigurator usageStatisticsConfigurator,
             @NotNull final MqttConfigurator mqttConfigurator,
             @NotNull final ListenerConfigurator listenerConfigurator,
-            @NotNull final PersistenceConfigurator persistenceConfigurator) {
+            @NotNull final PersistenceConfigurator persistenceConfigurator,
+
+            @NotNull final TopicConfigurator topicConfigurator) {
 
         this.configurationFile = configurationFile;
         this.envVarUtil = envVarUtil;
@@ -71,6 +75,8 @@ public class ConfigFileReader {
         this.securityConfigurator = securityConfigurator;
         this.usageStatisticsConfigurator = usageStatisticsConfigurator;
         this.persistenceConfigurator = persistenceConfigurator;
+
+        this.topicConfigurator = topicConfigurator;
     }
 
     public void applyConfig() {
@@ -139,6 +145,13 @@ public class ConfigFileReader {
         securityConfigurator.setSecurityConfig(config.getSecurityConfig());
         usageStatisticsConfigurator.setUsageStatisticsConfig(config.getUsageStatisticsConfig());
         persistenceConfigurator.setPersistenceConfig(config.getPersistenceConfig());
+
+        /**
+         * Topic configurator, only sets maxTopics.
+         *
+         * Added by Christoffer Stensrud
+         */
+        topicConfigurator.setTopicConfig(config.getTopicConfig());
     }
 
 }

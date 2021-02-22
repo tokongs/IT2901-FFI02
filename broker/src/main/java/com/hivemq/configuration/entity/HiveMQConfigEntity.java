@@ -73,4 +73,16 @@ public class HiveMQConfigEntity {
     public @NotNull PersistenceEntity getPersistenceConfig() {
         return persistence;
     }
+
+    /**
+     * Topic configurator, only sets maxTopics.
+     *
+     * Added by Christoffer Stensrud
+     */
+    @XmlElementRef(required = false)
+    private @NotNull TopicConfigEntity topicConfig = new TopicConfigEntity();
+
+    public @NotNull TopicConfigEntity getTopicConfig() {
+        return topicConfig;
+    }
 }
