@@ -87,7 +87,7 @@ dependencies {
     implementation("com.google.dagger:dagger:${property("dagger.version")}")
 
     compileOnly("org.slf4j:slf4j-api:${property("slf4j.version")}")
-    compileOnly("io.vavr:vavr:0.10.3")
+    compile("io.vavr:vavr:0.10.3")
 
     annotationProcessor("com.google.dagger:dagger-compiler:${property("dagger.version")}")
 }

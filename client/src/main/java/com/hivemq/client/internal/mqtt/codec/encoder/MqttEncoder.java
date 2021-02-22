@@ -63,9 +63,13 @@ public class MqttEncoder extends ChannelDuplexHandler {
         context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
     }
 
-    public void setTOS(final ChannelHandlerContext ctx,
-                       Either<MqttPublish, MqttStatefulPublish> msg) {
-      TopicPriority priority = msg.isLeft() ? msg.getTopic() : msg.stateless().getPriority;
+    public void setTOS(final @NotNull ChannelHandlerContext ctx,
+                       final @NotNull Object msg) {
+
+      TopicPriority priority = 
+        (msg instanceof MqttPublish) 
+        ? ((MqttPublish) msg).getTopic().getPriority() 
+        : ((MqttStatefulPublish) msg).getTopic().stateless().getPriority();
 
       SocketChannelConfig config = (SocketChannelConfig) ctx.channel().config();
 
