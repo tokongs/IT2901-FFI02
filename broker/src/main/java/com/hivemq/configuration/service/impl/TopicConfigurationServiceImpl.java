@@ -1,6 +1,5 @@
 package com.hivemq.configuration.service.impl;
 
-import com.hivemq.configuration.service.MqttConfigurationService;
 import com.hivemq.configuration.service.TopicConfigurationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

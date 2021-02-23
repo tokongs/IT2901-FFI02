@@ -26,7 +26,8 @@ public class TopicConfigurator {
 
     void setTopicConfig(@NotNull final TopicConfigEntity topicConfigEntity) {
 
-        final int maxTopics = topicConfigEntity.getMaxTopicsConfigEntity().getMaxTopics();
+        /*final int maxTopics = topicConfigEntity.getMaxTopicsConfigEntity().getMaxTopics(); */ //old
+        final int maxTopics = topicConfigEntity.getMaxTopics();
         topicConfigurationService.setMaxTopics(validateMaxTopics(maxTopics));
 
     }
