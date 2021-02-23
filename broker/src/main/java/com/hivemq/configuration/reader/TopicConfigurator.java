@@ -33,11 +33,11 @@ public class TopicConfigurator {
 
     private int validateMaxTopics(final int maxTopics) {
         if (maxTopics < MAX_TOPICS_MINIMUM) {
-            log.warn("The configured topic maximum ({}) is too small. It was set to {} instead.", maxTopics, MAX_TOPICS_MINIMUM);
+            log.warn("The configured maximum topics ({}) is too small. It was set to {} instead.", maxTopics, MAX_TOPICS_MINIMUM);
             return MAX_TOPICS_MINIMUM;
         }
         if (maxTopics > MAX_TOPICS_MAXIMUM) {
-            log.warn("The configured topic maximum ({}) is too large. It was set to {} instead.", maxTopics, MAX_TOPICS_MAXIMUM);
+            log.warn("The configured maximum topics ({}) is too large. It was set to {} instead.", maxTopics, MAX_TOPICS_MAXIMUM);
             return MAX_TOPICS_MAXIMUM;
         }
         return maxTopics;

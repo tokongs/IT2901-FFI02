@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * @author Christoffer Stensrud
  */
-@XmlRootElement(name = "mqtt")
+@XmlRootElement(name = "topic")
 @XmlAccessorType(XmlAccessType.NONE)
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 public class TopicConfigEntity {

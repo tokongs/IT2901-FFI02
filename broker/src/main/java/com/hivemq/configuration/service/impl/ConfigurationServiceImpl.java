@@ -86,7 +86,8 @@ public class ConfigurationServiceImpl implements FullConfigurationService {
         return persistenceConfigurationService;
     }
 
-    public TopicConfigurationService topicConfigurationService() {
+    @Override
+    public TopicConfigurationService topicConfiguration() {
         return topicConfigurationService;
     }
 }

@@ -25,7 +25,7 @@ import static com.hivemq.configuration.entity.topic.TopicConfigurationDefaults.M
 /**
  * @author Christoffer Stensrud
  */
-@XmlRootElement(name = "max-topics")
+@XmlRootElement(name = "topics")
 @XmlAccessorType(XmlAccessType.NONE)
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 public class MaxTopicsConfigEntity {

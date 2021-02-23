@@ -54,7 +54,7 @@ public class ConfigurationBootstrap {
                 new ListenerConfigurator(configurationService.listenerConfiguration(), systemInformation),
                 new PersistenceConfigurator(configurationService.persistenceConfigurationService()),
 
-                new TopicConfigurator(configurationService.topicConfigurationService()));
+                new TopicConfigurator(configurationService.topicConfiguration()));
 
         configFileReader.applyConfig();
 
