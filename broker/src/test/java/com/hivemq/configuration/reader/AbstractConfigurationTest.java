@@ -18,10 +18,7 @@ package com.hivemq.configuration.reader;
 import com.hivemq.configuration.info.SystemInformation;
 import com.hivemq.configuration.info.SystemInformationImpl;
 import com.hivemq.configuration.service.*;
-import com.hivemq.configuration.service.impl.MqttConfigurationServiceImpl;
-import com.hivemq.configuration.service.impl.PersistenceConfigurationServiceImpl;
-import com.hivemq.configuration.service.impl.RestrictionsConfigurationServiceImpl;
-import com.hivemq.configuration.service.impl.SecurityConfigurationServiceImpl;
+import com.hivemq.configuration.service.impl.*;
 import com.hivemq.configuration.service.impl.listener.ListenerConfigurationService;
 import com.hivemq.configuration.service.impl.listener.ListenerConfigurationServiceImpl;
 import com.hivemq.statistics.UsageStatisticsConfig;
@@ -55,10 +52,6 @@ public class AbstractConfigurationTest {
     UsageStatisticsConfig usageStatisticsConfig;
     SystemInformation systemInformation;
     PersistenceConfigurationService persistenceConfigurationService;
-
-    /**
-     *  Added by Christoffer Stensrud
-     */
     TopicConfigurationService topicConfigurationService;
 
     @Before
@@ -73,9 +66,11 @@ public class AbstractConfigurationTest {
         usageStatisticsConfig = new UsageStatisticsConfigImpl();
         systemInformation = new SystemInformationImpl(false);
         persistenceConfigurationService = new PersistenceConfigurationServiceImpl();
+        topicConfigurationService = new TopicConfigurationServiceImpl();
 
         when(envVarUtil.replaceEnvironmentVariablePlaceholders(anyString())).thenCallRealMethod();
         final ConfigurationFile configurationFile = new ConfigurationFile(xmlFile);
+
         reader = new ConfigFileReader(
                 configurationFile,
                 new RestrictionConfigurator(restrictionsConfigurationService),
@@ -85,11 +80,7 @@ public class AbstractConfigurationTest {
                 new MqttConfigurator(mqttConfigurationService),
                 new ListenerConfigurator(listenerConfigurationService, systemInformation),
                 new PersistenceConfigurator(persistenceConfigurationService),
-
-                /**
-                 *  Added by Christoffer Stensrud
-                 */
-                new TopicConfigurator((topicConfigurationService)));
+                new TopicConfigurator(topicConfigurationService));
     }
 
 }

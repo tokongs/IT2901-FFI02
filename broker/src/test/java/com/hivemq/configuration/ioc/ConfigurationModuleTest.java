@@ -21,10 +21,7 @@ import com.google.inject.Injector;
 import com.hivemq.bootstrap.ioc.SystemInformationModule;
 import com.hivemq.configuration.HivemqId;
 import com.hivemq.configuration.info.SystemInformationImpl;
-import com.hivemq.configuration.service.ConfigurationService;
-import com.hivemq.configuration.service.FullConfigurationService;
-import com.hivemq.configuration.service.MqttConfigurationService;
-import com.hivemq.configuration.service.RestrictionsConfigurationService;
+import com.hivemq.configuration.service.*;
 import com.hivemq.configuration.service.impl.listener.ListenerConfigurationService;
 import com.hivemq.persistence.clientsession.SharedSubscriptionService;
 import org.junit.Before;
@@ -120,5 +117,15 @@ public class ConfigurationModuleTest {
         assertSame(configurationService.listenerConfiguration(), injector.getInstance(ListenerConfigurationService.class));
         assertSame(configurationService.mqttConfiguration(), injector.getInstance(MqttConfigurationService.class));
         assertSame(configurationService.restrictionsConfiguration(), injector.getInstance(RestrictionsConfigurationService.class));
+    }
+
+    @Test
+    public void test_topic_configuration_service_singleton() throws Exception {
+
+        final TopicConfigurationService instance = injector.getInstance(TopicConfigurationService.class);
+        final TopicConfigurationService instance2 = injector.getInstance(TopicConfigurationService.class);
+
+        assertSame(instance, instance2);
+        assertSame(testConfigurationBootstrap.getTopicConfigurationService(), instance);
     }
 }

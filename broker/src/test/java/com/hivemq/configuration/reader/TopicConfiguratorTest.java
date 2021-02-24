@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
-import com.hivemq.configuration.service.TopicConfigurationService;
 
 public class TopicConfiguratorTest extends AbstractConfigurationTest {
 
@@ -16,11 +15,9 @@ public class TopicConfiguratorTest extends AbstractConfigurationTest {
         final int maxTopics = 255;
         final String contents =
                 "<hivemq>" +
-                        " <mqtt>\n" +
-                        "<topics> " +
+                        "<topic>" +
                         "<max-topics>" + maxTopics + "</max-topics> " +
-                        "</topics> " +
-                        "</mqtt>\n" +
+                        "</topic>" +
                         "</hivemq>";
         Files.write(contents.getBytes(UTF_8), xmlFile);
 
@@ -39,6 +36,23 @@ public class TopicConfiguratorTest extends AbstractConfigurationTest {
 
         reader.applyConfig();
 
+        assertEquals(8, topicConfigurationService.maxTopics());
+    }
+
+    @Test
+    public void test_topics_receive_max_negative_xml() throws Exception {
+        final String contents =
+                "<hivemq>" +
+                        "<topic>" +
+                        "<max-topics>-1</max-topics> " +
+                        "</topic>" +
+                        "</hivemq>";
+
+        Files.write(contents.getBytes(UTF_8), xmlFile);
+
+        reader.applyConfig();
+
+        // default is 8
         assertEquals(8, topicConfigurationService.maxTopics());
     }
 }

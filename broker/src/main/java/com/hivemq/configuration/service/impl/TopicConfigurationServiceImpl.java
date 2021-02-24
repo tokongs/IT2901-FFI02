@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Singleton
 public class TopicConfigurationServiceImpl implements TopicConfigurationService {
 
-    private static final Logger log = LoggerFactory.getLogger(MqttConfigurationServiceImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(TopicConfigurationServiceImpl.class);
 
     private final AtomicInteger maxTopics = new AtomicInteger(MAX_TOPICS_MAXIMUM);
 

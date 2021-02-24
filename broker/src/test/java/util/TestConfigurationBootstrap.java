@@ -33,6 +33,7 @@ public class TestConfigurationBootstrap {
     private ConfigurationServiceImpl configurationService;
     private final UsageStatisticsConfig usageStatisticsConfig;
     private final PersistenceConfigurationService persistenceConfigurationService;
+
     private final TopicConfigurationServiceImpl topicConfigurationService;
 
     public TestConfigurationBootstrap() {
@@ -42,6 +43,7 @@ public class TestConfigurationBootstrap {
         securityConfigurationService = new SecurityConfigurationServiceImpl();
         usageStatisticsConfig = new UsageStatisticsConfigImpl();
         persistenceConfigurationService = new PersistenceConfigurationServiceImpl();
+
         topicConfigurationService = new TopicConfigurationServiceImpl();
 
         configurationService = new ConfigurationServiceImpl(
@@ -51,6 +53,7 @@ public class TestConfigurationBootstrap {
                 securityConfigurationService,
                 usageStatisticsConfig,
                 persistenceConfigurationService,
+
                 topicConfigurationService);
     }
 
@@ -98,4 +101,7 @@ public class TestConfigurationBootstrap {
         return persistenceConfigurationService;
     }
 
+    public TopicConfigurationServiceImpl getTopicConfigurationService() {
+        return topicConfigurationService;
+    }
 }
