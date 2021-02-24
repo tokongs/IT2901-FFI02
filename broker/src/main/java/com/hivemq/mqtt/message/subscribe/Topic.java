@@ -43,6 +43,9 @@ public class Topic implements Serializable, Comparable<Topic>, Mqtt3Topic, Mqtt5
      */
     public static final QoS DEFAULT_QOS = QoS.AT_LEAST_ONCE;
 
+    //Priority
+    private int priority;
+
     //MQTT 3 & 5
     private final @NotNull String topic;
     private @NotNull QoS qoS;
@@ -81,6 +84,14 @@ public class Topic implements Serializable, Comparable<Topic>, Mqtt3Topic, Mqtt5
                  final boolean noLocal, final boolean retainAsPublished) {
 
         this(topic, qoS, noLocal, retainAsPublished, DEFAULT_RETAIN_HANDLING, null);
+    }
+
+    //MQTT 5 Topic with priority
+    public Topic(final @NotNull String topic, final @NotNull QoS qoS, final @NotNull int priority,
+                  final boolean noLocal, final boolean retainAsPublished) {
+
+        this(topic, qoS, noLocal, retainAsPublished, DEFAULT_RETAIN_HANDLING, null);
+        this.priority = priority;
     }
 
     //MQTT 3 Topic
@@ -200,5 +211,13 @@ public class Topic implements Serializable, Comparable<Topic>, Mqtt3Topic, Mqtt5
 
         sizeInMemory = size;
         return sizeInMemory;
+    }
+
+    /**
+     * testtesttest
+     * @return a integer to test topic config.
+     */
+    public int getPriority() {
+        return priority;
     }
 }

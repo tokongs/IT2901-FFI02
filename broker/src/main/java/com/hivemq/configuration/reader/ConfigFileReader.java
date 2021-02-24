@@ -16,6 +16,7 @@
 package com.hivemq.configuration.reader;
 
 import com.google.common.collect.ImmutableList;
+import com.hivemq.configuration.entity.TopicConfigEntity;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.configuration.entity.HiveMQConfigEntity;
 import com.hivemq.configuration.entity.listener.TCPListenerEntity;
@@ -147,7 +148,7 @@ public class ConfigFileReader {
         persistenceConfigurator.setPersistenceConfig(config.getPersistenceConfig());
 
         /**
-         * Topic configurator, only sets maxTopics.
+         * Topic configurator
          *
          * Added by Christoffer Stensrud
          */
