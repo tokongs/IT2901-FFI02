@@ -1,5 +1,6 @@
 plugins {
     id("java-platform")
+    id("com.github.sgtsilvio.gradle.metadata")
 }
 
 

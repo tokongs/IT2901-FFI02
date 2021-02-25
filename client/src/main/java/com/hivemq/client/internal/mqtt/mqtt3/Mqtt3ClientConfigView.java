@@ -17,14 +17,18 @@
 package com.hivemq.client.internal.mqtt.mqtt3;
 
 import com.hivemq.client.annotations.Immutable;
+import com.hivemq.client.extensions.TopicPriority;
 import com.hivemq.client.internal.mqtt.MqttClientConfig;
 import com.hivemq.client.internal.mqtt.message.auth.MqttSimpleAuth;
 import com.hivemq.client.internal.mqtt.message.auth.mqtt3.Mqtt3SimpleAuthView;
 import com.hivemq.client.internal.mqtt.message.publish.MqttWillPublish;
 import com.hivemq.client.internal.mqtt.message.publish.mqtt3.Mqtt3PublishView;
 import com.hivemq.client.internal.util.collections.ImmutableList;
+<<<<<<< HEAD
 import com.hivemq.client.extensions.TopicPriority;
 //import com.hivemq.client.mqtt.MqttClientExecutorConfig;
+=======
+>>>>>>> origin/fix/gradle-config
 import com.hivemq.client.mqtt.MqttClientExecutorConfig;
 import com.hivemq.client.mqtt.MqttClientState;
 import com.hivemq.client.mqtt.MqttClientTransportConfig;
@@ -52,6 +56,11 @@ public class Mqtt3ClientConfigView implements Mqtt3ClientConfig {
 
     public Mqtt3ClientConfigView(final @NotNull MqttClientConfig delegate) {
         this.delegate = delegate;
+    }
+
+    @Override
+    public @NotNull ImmutableList<TopicPriority> getTopicPriorities() {
+        return delegate.getTopicPriorities();
     }
 
     @Override
