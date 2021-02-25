@@ -24,6 +24,7 @@ import com.hivemq.client.internal.mqtt.message.publish.MqttPublish;
 import com.hivemq.client.internal.mqtt.message.publish.MqttStatefulPublish;
 import com.hivemq.client.mqtt.datatypes.MqttTopic;
 import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
+import com.hivemq.client.internal.util.collections.ImmutableList;
 import com.hivemq.client.extensions.PriorityClass;
 import com.hivemq.client.extensions.TopicPriority;
 import io.netty.buffer.ByteBuf;
@@ -65,23 +66,28 @@ public class MqttEncoder extends ChannelDuplexHandler {
     public void setTOS(final @NotNull ChannelHandlerContext ctx,
                        final @NotNull Object msg) {
 
-      TopicPriority priority = (msg instanceof MqttPublish) 
-                             ? ((MqttPublish) msg).getTopic().getPriority() 
-                             : ((MqttStatefulPublish) msg).getTopic().stateless().getPriority();
+      MqttTopic topic = (msg instanceof MqttPublish) 
+                      ? ((MqttPublish) msg).getTopic()
+                      : ((MqttStatefulPublish) msg).stateless().getTopic();
 
       SocketChannelConfig config = (SocketChannelConfig) ctx.channel().config();
 
+      //ImmutableList<TopicPriority> priority = config.getTopicPriorities;
+      
       int prevTOS = config.getTrafficClass();
-
+      int newTOS = prevTOS;
+      /*
       switch (priority.getPriorityClass()) {
         //Shift once left, as least significant bit is reserved for something else,
         //Or with mask in order to preserve information in most significant bits
-        case ROUTINE   : config.setTrafficClass(prevTOS | 0 << 1); break;
-        case PRIORITY  : config.setTrafficClass(prevTOS | 1 << 1); break;
-        case IMMEDIATE : config.setTrafficClass(prevTOS | 2 << 1); break;
-        case FLASH     : config.setTrafficClass(prevTOS | 3 << 1); break;
-        default: config.setTrafficClass(prevTOS | 0 << 1);
+        case ROUTINE   : newTOS = prevTOS | 0 << 1; break;
+        case PRIORITY  : newTOS = prevTOS | 1 << 1; break;
+        case IMMEDIATE : newTOS = prevTOS | 2 << 1; break;
+        case FLASH     : newTOS = prevTOS | 3 << 1; break;
+        default        : newTOS = prevTOS | 0 << 1; 
       }
+      */
+      config.setTrafficClass(newTOS);
     }
 
     @Override
@@ -93,7 +99,9 @@ public class MqttEncoder extends ChannelDuplexHandler {
 
         if (msg instanceof MqttMessage) {
             final MqttMessage message = (MqttMessage) msg;
-            final MqttMessageEncoder<?> messageEncoder = encoders.get(message.getType().getCode());
+            final MqttMessageEncoder<?> messageEncoder = 
+              encoders.get(message.getType().getCode());
+
             if (messageEncoder == null) {
                 throw new UnsupportedOperationException();
             }
