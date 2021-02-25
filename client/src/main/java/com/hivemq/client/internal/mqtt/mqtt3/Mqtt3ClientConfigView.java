@@ -24,11 +24,6 @@ import com.hivemq.client.internal.mqtt.message.auth.mqtt3.Mqtt3SimpleAuthView;
 import com.hivemq.client.internal.mqtt.message.publish.MqttWillPublish;
 import com.hivemq.client.internal.mqtt.message.publish.mqtt3.Mqtt3PublishView;
 import com.hivemq.client.internal.util.collections.ImmutableList;
-<<<<<<< HEAD
-import com.hivemq.client.extensions.TopicPriority;
-//import com.hivemq.client.mqtt.MqttClientExecutorConfig;
-=======
->>>>>>> origin/fix/gradle-config
 import com.hivemq.client.mqtt.MqttClientExecutorConfig;
 import com.hivemq.client.mqtt.MqttClientState;
 import com.hivemq.client.mqtt.MqttClientTransportConfig;
@@ -128,10 +123,4 @@ public class Mqtt3ClientConfigView implements Mqtt3ClientConfig {
         return Optional.ofNullable(delegate.getRawConnectionConfig());
     }
 
-    //stfu gradle
-    @Override 
-    public @NotNull ImmutableList<TopicPriority> getTopicPriorities(){
-      ImmutableList<TopicPriority> topicPriorities = ImmutableList.of();
-      return topicPriorities;
-    }
 }
