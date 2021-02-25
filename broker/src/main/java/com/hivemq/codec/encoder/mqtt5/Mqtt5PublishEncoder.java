@@ -16,6 +16,7 @@
 package com.hivemq.codec.encoder.mqtt5;
 
 import com.google.common.primitives.ImmutableIntArray;
+import com.hivemq.configuration.service.TopicConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.codec.encoder.MqttEncoder;
 import com.hivemq.configuration.service.SecurityConfigurationService;
@@ -43,7 +44,8 @@ public class Mqtt5PublishEncoder extends Mqtt5MessageWithUserPropertiesEncoder<P
     private static final int FIXED_HEADER = MessageType.PUBLISH.ordinal() << 4;
 
     public Mqtt5PublishEncoder(final @NotNull MessageDroppedService messageDroppedService,
-                               final @NotNull SecurityConfigurationService securityConfigurationService) {
+                               final @NotNull SecurityConfigurationService securityConfigurationService){
+
         super(messageDroppedService, securityConfigurationService);
     }
 
