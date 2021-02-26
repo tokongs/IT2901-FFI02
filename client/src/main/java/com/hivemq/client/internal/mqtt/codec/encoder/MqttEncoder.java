@@ -35,7 +35,10 @@ import io.netty.channel.socket.SocketChannelConfig;
 import io.netty.channel.ChannelPromise;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
+import java.util.Comparator;
 import java.util.stream.Collectors;
+import java.util.Collections;
 
 import javax.inject.Inject;
 
@@ -51,7 +54,7 @@ public class MqttEncoder extends ChannelDuplexHandler {
 
     private final @NotNull MqttMessageEncoders encoders;
     private final @NotNull MqttEncoderContext context;
-
+    private ImmutableList<TopicPriority> priorities = ImmutableList.of();
     private boolean inRead = false;
     private boolean pendingFlush = false;
 
@@ -61,60 +64,51 @@ public class MqttEncoder extends ChannelDuplexHandler {
         context = new MqttEncoderContext(ByteBufAllocator.DEFAULT);
     }
 
+    public void onConnected(final @NotNull MqttClientConnectionConfig connectionConfig,
+                            final @NotNull MqttClientConfig clientConfig) {
+      context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
+      this.priorities = clientConfig.getTopicPriorities();
+    }
+
     public void onConnected(final @NotNull MqttClientConnectionConfig connectionConfig) {
-        context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
+      context.setMaximumPacketSize(connectionConfig.getSendMaximumPacketSize());
     }
 
     public void setTOS(final @NotNull ChannelHandlerContext ctx,
                        final @NotNull Object msg) {
 
-      /*
-      MqttTopic topic = null;
-      if (msg instanceof MqttPublish) { 
-        topic = ((MqttPublish) msg).getTopic();
-      } else if (msg instanceof MqttStatefulPublish) {
-        topic =((MqttStatefulPublish) msg).stateless().getTopic();
-      }
-      */
-
-      
       MqttTopic topic = (msg instanceof MqttPublish) 
                       ? ((MqttPublish) msg).getTopic()
                       : (msg instanceof MqttStatefulPublish)
                       ? ((MqttStatefulPublish) msg).stateless().getTopic()
                       : null;
-      
 
       if (topic == null) return;
 
-      ImmutableList<TopicPriority> priorities = 
-        ((MqttClientConfig) ctx.channel().config()).getTopicPriorities();
-
+      if (!(ctx.channel().config() instanceof SocketChannelConfig)) return;
       SocketChannelConfig config = ((SocketChannelConfig) ctx.channel().config());
 
-      ImmutableList<TopicPriority> filteredPriorities = (ImmutableList<TopicPriority>)
+      PriorityClass priority = 
         priorities.stream()
-                  .filter(p -> p.getTopicFilter().matches(topic.filter())) 
-                  .collect(Collectors.toList());
-
-      PriorityClass priority = filteredPriorities.get(0) != null
-                             ? filteredPriorities.get(0).getPriorityClass()
-                             : PriorityClass.ROUTINE;
-                              
-      //byte prevTOS = (byte) config.getTrafficClass();
-      byte newTOS = 4;
+                  .filter(p -> p.getTopicFilter().matches(topic.filter()))
+                  .max(Comparator.comparingInt(a -> a.getTopicFilter().getLevels().size()))
+                  .map(a -> a.getPriorityClass())
+                  .orElseGet(() -> PriorityClass.ROUTINE);
+                  
+      int prevTOS = config.getTrafficClass();
+      int newTOS  = 0;
       
-      // switch (priority) {
-      //   //Shift once left, as least significant bit is reserved for something else,
-      //   //Or with mask in order to preserve information in most significant bits
-      //   case ROUTINE   : newTOS = 0x2;  break; //prevTOS | ((byte) (0 << 1)); break;
-      //   case PRIORITY  : newTOS = 0x4;  break; //prevTOS | ((byte) (1 << 1)); break;
-      //   case IMMEDIATE : newTOS = 0x8;  break; //prevTOS | ((byte) (2 << 1)); break;
-      //   case FLASH     : newTOS = 0x16; break; //prevTOS | ((byte) (3 << 1)); break;
-      //   default        : newTOS = 0x2;  break; //prevTOS | ((byte) (0 << 1)); 
-      // }
- 
-      config.setTrafficClass(0x2);
+      switch (priority) {
+        //Shift once left, as least significant bit is reserved for something else,
+        //Or with mask in order to preserve information in most significant bits
+        case ROUTINE   : newTOS = prevTOS | 0 << 3; break;
+        case PRIORITY  : newTOS = prevTOS | 1 << 3; break;
+        case IMMEDIATE : newTOS = prevTOS | 2 << 3; break;
+        case FLASH     : newTOS = prevTOS | 3 << 3; break;
+        default        : newTOS = prevTOS | 0 << 3; 
+      }
+       
+      config.setTrafficClass(newTOS);
     }
 
     @Override
