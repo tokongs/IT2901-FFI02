@@ -66,6 +66,7 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
     private volatile @Nullable EventLoop eventLoop;
     private int eventLoopAcquires;
     private long eventLoopAcquireCount;
+    private int trafficClass;
 
     private final @NotNull AtomicReference<@NotNull MqttClientState> state;
     private volatile @Nullable MqttClientConnectionConfig connectionConfig;
