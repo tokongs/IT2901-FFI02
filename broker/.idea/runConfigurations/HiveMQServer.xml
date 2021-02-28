@@ -1,5 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="HiveMQServer" type="Application" factoryName="Application" nameIsGenerated="true">
+    <envs>
+      <env name="HIVEMQ_HOME" value="src/packaging" />
+    </envs>
     <option name="MAIN_CLASS_NAME" value="com.hivemq.HiveMQServer" />
     <module name="hivemq-community-edition.main" />
     <option name="VM_PARAMETERS" value="-Djava.net.preferIPv4Stack=true -Dhivemq.home=${HOME}/hivemq4home -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9010 -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -noverify --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens jdk.management/com.sun.management.internal=ALL-UNNAMED --add-exports java.base/jdk.internal.misc=ALL-UNNAMED" />
