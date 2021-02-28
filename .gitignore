@@ -22,6 +22,10 @@ gen/
 *.o
 *.so
 
+
+# local data #
+broker/src/packaging/data/
+
 # Packages #
 ############
 *.7z
