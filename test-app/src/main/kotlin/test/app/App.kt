@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
 
     val client = Mqtt5Client.builder()
         .identifier(UUID.randomUUID().toString())
-        .serverHost("165.22.126.152")
+        .serverHost("127.0.0.1")
         .addTopicPriority(TopicPriority(MqttTopicFilter.of("routine/#"), PriorityClass.ROUTINE))
         .addTopicPriority(TopicPriority(MqttTopicFilter.of("priority/#"), PriorityClass.PRIORITY))
         .addTopicPriority(TopicPriority(MqttTopicFilter.of("immediate/#"), PriorityClass.IMMEDIATE))
@@ -21,7 +21,9 @@ fun main(args: Array<String>) {
         .buildBlocking()
 
     client.connect()
+    client.subscribeWith().topicFilter("testtopic/1").qos(MqttQos.AT_MOST_ONCE).send()
     client.publishWith().topic("testtopic/1").payload("Hei".toByteArray()).qos(MqttQos.AT_MOST_ONCE).send()
 
     client.publishWith().topic("nottesttopic/1").payload("Hei".toByteArray()).qos(MqttQos.AT_MOST_ONCE).send()
+    client.disconnect()
 }
