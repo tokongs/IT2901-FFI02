@@ -1,0 +1,11 @@
+<hivemq>
+    <listeners>
+        <tcp-listener>
+            <port>1883</port>
+            <bind-address>0.0.0.0</bind-address>
+        </tcp-listener>
+    </listeners>
+    <persistence>
+        <mode>in-memory</mode>
+    </persistence>
+</hivemq>
