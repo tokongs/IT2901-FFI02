@@ -1,20 +1,16 @@
 package com.hivemq.configuration.entity;
 
-import com.hivemq.configuration.entity.listener.ListenerEntity;
 import com.hivemq.configuration.entity.topic.NestedTopicConfigEntity;
-import com.hivemq.configuration.entity.topic.TopicEntity;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
-import com.hivemq.mqtt.message.subscribe.Topic;
 
 import javax.xml.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.hivemq.configuration.entity.topic.TopicConfigurationDefaults.MAX_TOPICS_DEFAULT;
 
 /**
  * @author Christoffer Stensrud
+ * Currently UNUSED
  */
 @XmlRootElement(name = "topic-config")
 @XmlAccessorType(XmlAccessType.NONE)

@@ -6,6 +6,9 @@ import org.junit.Test;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Currently UNUSED
+ */
 public class TopicConfiguratorTest extends AbstractConfigurationTest {
 
 

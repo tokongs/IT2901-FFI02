@@ -4,6 +4,7 @@ import com.hivemq.codec.encoder.mqtt5.UnsignedDataTypes;
 
 /**
  * @author Christoffer Stensrud
+ * Currently UNUSED
  */
 public class TopicConfigurationDefaults {
 

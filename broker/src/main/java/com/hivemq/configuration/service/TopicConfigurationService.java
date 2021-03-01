@@ -24,7 +24,6 @@ public interface TopicConfigurationService {
      */
     <T extends Topic> void addTopic(final T topic) throws ConfigurationValidationException, IllegalArgumentException;
 
-
     /**
      * @return an unmodifiable list of all available topics
      */
@@ -33,6 +32,7 @@ public interface TopicConfigurationService {
 
     /**
      * @return an integer that specifies max topics
+     * UNUSED
      */
     int maxTopics();
 
