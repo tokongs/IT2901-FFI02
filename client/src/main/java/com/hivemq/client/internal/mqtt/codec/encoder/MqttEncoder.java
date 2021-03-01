@@ -98,7 +98,6 @@ public class MqttEncoder extends ChannelDuplexHandler {
       int tosField = config.getTrafficClass() & 0b11100111;
       
       switch (priority) {
-        //Shift once left, as least significant bit is reserved for something else,
         //Or with mask in order to preserve information in most significant bits
         case ROUTINE   : tosField |= 0b00000000; break;
         case PRIORITY  : tosField |= 0b00001000; break;
