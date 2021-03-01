@@ -30,6 +30,11 @@ public interface TopicConfigurationService {
     @ReadOnly
     List<Topic> getTopics();
 
+
+
+
+
+
     /**
      * @return an integer that specifies max topics
      * UNUSED

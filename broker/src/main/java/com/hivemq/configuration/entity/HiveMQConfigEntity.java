@@ -87,7 +87,7 @@ public class HiveMQConfigEntity {
     /**
      * Topic configurator, only sets maxTopics.
      *
-     * Added by Christoffer Stensrud
+     * Unused
      */
     @XmlElementRef(required = false)
     private @NotNull TopicConfigEntity topicConfig = new TopicConfigEntity();

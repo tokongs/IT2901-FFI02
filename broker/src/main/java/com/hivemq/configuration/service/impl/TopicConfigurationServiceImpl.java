@@ -55,7 +55,7 @@ public class TopicConfigurationServiceImpl implements TopicConfigurationService 
         return ImmutableList.copyOf(topics);
     }
 
-    /* UNUSED
+    /* UNUSED */
     @Override
     public int maxTopics() {
         return maxTopics.get();
@@ -65,5 +65,5 @@ public class TopicConfigurationServiceImpl implements TopicConfigurationService 
     public void setMaxTopics(final int maxTopics) {
         log.debug("Setting the maximum number of topics to {}", maxTopics);
         this.maxTopics.set(maxTopics);
-    }*/
+    }
 }
