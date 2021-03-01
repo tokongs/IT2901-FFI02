@@ -95,17 +95,17 @@ public class MqttEncoder extends ChannelDuplexHandler {
                   .map(a -> a.getPriorityClass())
                   .orElseGet(() -> PriorityClass.ROUTINE);
                   
-      int prevTOS = config.getTrafficClass();
-      int newTOS  = 0;
+      int prevTOS = config.getTrafficClass() & 0b11100111;
+      int newTOS  = 0b00000000;
       
       switch (priority) {
         //Shift once left, as least significant bit is reserved for something else,
         //Or with mask in order to preserve information in most significant bits
-        case ROUTINE   : newTOS = prevTOS | 0 << 3; break;
-        case PRIORITY  : newTOS = prevTOS | 1 << 3; break;
-        case IMMEDIATE : newTOS = prevTOS | 2 << 3; break;
-        case FLASH     : newTOS = prevTOS | 3 << 3; break;
-        default        : newTOS = prevTOS | 0 << 3; 
+        case ROUTINE   : newTOS = prevTOS | 0b00000000; break;
+        case PRIORITY  : newTOS = prevTOS | 0b00001000; break;
+        case IMMEDIATE : newTOS = prevTOS | 0b00010000; break;
+        case FLASH     : newTOS = prevTOS | 0b00011000; break;
+        default        : newTOS = prevTOS | 0b00000000; 
       }
        
       config.setTrafficClass(newTOS);

@@ -7,7 +7,6 @@ plugins {
     id("com.github.sgtsilvio.gradle.utf8")
     id("com.github.sgtsilvio.gradle.metadata")
     id("com.github.sgtsilvio.gradle.javadoc-links")
-    id("com.github.mrsarm.jshell.plugin") version "1.0.0"
 }
 
 
