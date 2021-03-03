@@ -21,7 +21,6 @@ import com.hivemq.codec.encoder.EncoderFactory;
 import com.hivemq.codec.encoder.MQTTMessageEncoder;
 import com.hivemq.configuration.service.FullConfigurationService;
 import com.hivemq.configuration.service.RestrictionsConfigurationService;
-import com.hivemq.configuration.service.TopicConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extensions.handler.*;
 import com.hivemq.logging.EventLog;
@@ -39,6 +38,7 @@ import com.hivemq.mqtt.handler.ping.PingRequestHandler;
 import com.hivemq.mqtt.handler.publish.MessageExpiryHandler;
 import com.hivemq.mqtt.handler.subscribe.SubscribeHandler;
 import com.hivemq.mqtt.handler.unsubscribe.UnsubscribeHandler;
+import com.hivemq.mqtt.topic.TopicMatcher;
 import com.hivemq.security.ssl.SslParameterHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
@@ -111,7 +111,8 @@ public class ChannelDependencies {
             final @NotNull Provider<MessageExpiryHandler> publishMessageExpiryHandlerProvider,
             final @NotNull MqttServerDisconnector mqttServerDisconnector,
             final @NotNull InterceptorHandler interceptorHandler,
-            final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter) {
+            final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter,
+            final @NotNull TopicMatcher topicMatcher) {
 
         this.noConnectIdleHandler = noConnectIdleHandler;
         this.connectHandlerProvider = connectHandlerProvider;
@@ -128,7 +129,7 @@ public class ChannelDependencies {
         this.restrictionsConfigurationService = restrictionsConfigurationService;
         this.mqttConnectDecoder = mqttConnectDecoder;
         this.mqttMessageEncoder = new MQTTMessageEncoder(encoderFactory, globalMQTTMessageCounter,
-                fullConfigurationService.topicConfiguration());
+                fullConfigurationService.topicConfiguration(), topicMatcher);
         this.eventLog = eventLog;
         this.sslParameterHandler = sslParameterHandler;
         this.mqttDecoders = mqttDecoders;

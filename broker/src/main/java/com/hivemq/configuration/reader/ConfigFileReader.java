@@ -16,7 +16,6 @@
 package com.hivemq.configuration.reader;
 
 import com.google.common.collect.ImmutableList;
-import com.hivemq.configuration.entity.TopicConfigEntity;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.configuration.entity.HiveMQConfigEntity;
 import com.hivemq.configuration.entity.listener.TCPListenerEntity;
@@ -54,7 +53,7 @@ public class ConfigFileReader {
     private final @NotNull UsageStatisticsConfigurator usageStatisticsConfigurator;
     private final @NotNull PersistenceConfigurator persistenceConfigurator;
 
-    private final @NotNull TopicConfigurator topicConfigurator;
+    private final @NotNull TopicPriorirtyConfigurator topicPriorirtyConfigurator;
 
     public ConfigFileReader(
             @NotNull final ConfigurationFile configurationFile,
@@ -66,7 +65,7 @@ public class ConfigFileReader {
             @NotNull final ListenerConfigurator listenerConfigurator,
             @NotNull final PersistenceConfigurator persistenceConfigurator,
 
-            @NotNull final TopicConfigurator topicConfigurator) {
+            @NotNull final TopicPriorirtyConfigurator topicPriorirtyConfigurator) {
 
         this.configurationFile = configurationFile;
         this.envVarUtil = envVarUtil;
@@ -77,7 +76,7 @@ public class ConfigFileReader {
         this.usageStatisticsConfigurator = usageStatisticsConfigurator;
         this.persistenceConfigurator = persistenceConfigurator;
 
-        this.topicConfigurator = topicConfigurator;
+        this.topicPriorirtyConfigurator = topicPriorirtyConfigurator;
     }
 
     public void applyConfig() {
@@ -152,7 +151,7 @@ public class ConfigFileReader {
          *
          * Added by Christoffer Stensrud
          */
-        topicConfigurator.setTopicConfig(config.getTopicConfig());
+        topicPriorirtyConfigurator.setTopicPriorityConfig(config.getTopicPriorityConfig());
     }
 
 }

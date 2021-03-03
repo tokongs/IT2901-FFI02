@@ -16,7 +16,7 @@
 package com.hivemq.configuration.entity;
 
 import com.hivemq.configuration.entity.listener.ListenerEntity;
-import com.hivemq.configuration.entity.topic.TopicEntity;
+import com.hivemq.configuration.entity.topic.PriorityEntity;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 
 import javax.xml.bind.annotation.*;
@@ -36,9 +36,9 @@ public class HiveMQConfigEntity {
     @XmlElementRef(required = false)
     private @NotNull List<ListenerEntity> listeners = new ArrayList<>();
 
-    @XmlElementWrapper(name = "topics")
+    @XmlElementWrapper(name = "priorities")
     @XmlElementRef(required = false)
-    private @NotNull List<TopicEntity> topics = new ArrayList<>();
+    private @NotNull List<PriorityEntity> priorities = new ArrayList<>();
 
     @XmlElementRef(required = false)
     private @NotNull MqttConfigEntity mqtt = new MqttConfigEntity();
@@ -60,8 +60,8 @@ public class HiveMQConfigEntity {
         return listeners;
     }
 
-    public @NotNull List<TopicEntity> getTopicConfig() {
-        return topics;
+    public @NotNull List<PriorityEntity> getTopicPriorityConfig() {
+        return priorities;
     }
 
     public @NotNull MqttConfigEntity getMqttConfig() {
@@ -83,14 +83,5 @@ public class HiveMQConfigEntity {
     public @NotNull PersistenceEntity getPersistenceConfig() {
         return persistence;
     }
-
-    /**
-     * Topic configurator, only sets maxTopics.
-     *
-     * Unused
-     */
-    @XmlElementRef(required = false)
-    private @NotNull TopicConfigEntity topicConfig = new TopicConfigEntity();
-
 
 }

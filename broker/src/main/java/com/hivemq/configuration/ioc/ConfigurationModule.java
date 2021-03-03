@@ -60,7 +60,7 @@ public class ConfigurationModule extends SingletonModule {
 
         bind(SecurityConfigurationService.class).toInstance(configurationService.securityConfiguration());
 
-        bind(TopicConfigurationService.class).toInstance(configurationService.topicConfiguration());
+        bind(PriorityConfigurationService.class).toInstance(configurationService.topicConfiguration());
     }
 
 }
