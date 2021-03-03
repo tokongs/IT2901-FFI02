@@ -193,7 +193,6 @@ tasks.shadowJar {
 
     minimize()
 }
-
 /* ******************** build cache ******************** */
 allprojects {
     normalization {

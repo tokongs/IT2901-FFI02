@@ -66,6 +66,7 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
     private volatile @Nullable EventLoop eventLoop;
     private int eventLoopAcquires;
     private long eventLoopAcquireCount;
+    private int trafficClass;
 
     private final @NotNull AtomicReference<@NotNull MqttClientState> state;
     private volatile @Nullable MqttClientConnectionConfig connectionConfig;
@@ -82,7 +83,8 @@ public class MqttClientConfig implements Mqtt5ClientConfig {
             final @NotNull MqttClientAdvancedConfig advancedConfig,
             final @NotNull ConnectDefaults connectDefaults,
             final @NotNull ImmutableList<MqttClientConnectedListener> connectedListeners,
-            final @NotNull ImmutableList<MqttClientDisconnectedListener> disconnectedListeners, @NotNull ImmutableList<TopicPriority> priorities) {
+            final @NotNull ImmutableList<MqttClientDisconnectedListener> disconnectedListeners, 
+            @NotNull ImmutableList<TopicPriority> priorities) {
 
         this.mqttVersion = mqttVersion;
         this.clientIdentifier = clientIdentifier;
