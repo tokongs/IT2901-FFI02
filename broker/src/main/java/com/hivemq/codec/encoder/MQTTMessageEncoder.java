@@ -29,6 +29,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannelConfig;
 import io.netty.handler.codec.MessageToByteEncoder;
 
+import java.util.logging.Logger;
+
 /**
  * @author Dominik Obermaier
  */
@@ -77,21 +79,26 @@ public class MQTTMessageEncoder extends MessageToByteEncoder<Message> {
     public void setTosValue(@NotNull final ChannelHandlerContext ctx, @NotNull final PUBLISH message){
         final String topic = message.getTopic() ;
         topicConfigurationService.getTopics();
-
-        final int prevTos = ((SocketChannelConfig) ctx.channel().config()).getTrafficClass();
-        ((SocketChannelConfig) ctx.channel().config()).setTrafficClass(prevTos & ROUTINE_BIT_MASK);
-        for (Topic t : topicConfigurationService.getTopics()) {
-            if (t.getTopic().equals(topic)) {
-                final int priority = t.getPriority();
-                if (priority < 200) {
-                    ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & PRIORITY_BIT_MASK);
-                } else if (priority < 300) {
-                    ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & IMMEDIATE_BIT_MASK);
-                } else {
-                    ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & FLASH_BIT_MASK);
+        try {
+            final int prevTos = ((SocketChannelConfig) ctx.channel().config()).getTrafficClass();
+            ((SocketChannelConfig) ctx.channel().config()).setTrafficClass(prevTos & ROUTINE_BIT_MASK);
+            for (Topic t : topicConfigurationService.getTopics()) {
+                if (t.getTopic().equals(topic)) {
+                    final int priority = t.getPriority();
+                    if (priority < 200) {
+                        ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & PRIORITY_BIT_MASK);
+                    } else if (priority < 300) {
+                        ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & IMMEDIATE_BIT_MASK);
+                    } else {
+                        ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & FLASH_BIT_MASK);
+                    }
                 }
             }
+        } catch (ClassCastException e){
+            Logger log = Logger.getLogger("MQTTMessageEncoder");
+            log.info("Faild to set traffic class... (ClassCastException)");
         }
+
     }
 }
 

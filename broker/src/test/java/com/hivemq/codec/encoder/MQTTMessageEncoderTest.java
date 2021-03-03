@@ -16,6 +16,7 @@
 package com.hivemq.codec.encoder;
 
 import com.hivemq.configuration.service.SecurityConfigurationService;
+import com.hivemq.configuration.service.TopicConfigurationService;
 import com.hivemq.mqtt.message.PINGRESP;
 import com.hivemq.mqtt.message.ProtocolVersion;
 import com.hivemq.mqtt.message.QoS;
@@ -36,6 +37,7 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import util.TestMessageEncoder;
 import util.TestMessageUtil;
 
@@ -53,9 +55,13 @@ public class MQTTMessageEncoderTest {
     @Mock
     private SecurityConfigurationService securityConfigurationService;
 
+    @Mock
+    private TopicConfigurationService topicConfigurationService;
+
     @Before
     public void setUp() throws Exception {
-        channel = new EmbeddedChannel(new TestMessageEncoder(messageDroppedService, securityConfigurationService));
+        MockitoAnnotations.initMocks(this);
+        channel = new EmbeddedChannel(new TestMessageEncoder(messageDroppedService, securityConfigurationService, topicConfigurationService));
         channel.attr(ChannelAttributes.MQTT_VERSION).set(ProtocolVersion.MQTTv3_1);
     }
 
