@@ -38,7 +38,9 @@ public class ConfigurationBootstrap {
                 new RestrictionsConfigurationServiceImpl(),
                 new SecurityConfigurationServiceImpl(),
                 new UsageStatisticsConfigImpl(),
-                new PersistenceConfigurationServiceImpl());
+                new PersistenceConfigurationServiceImpl(),
+
+                new TopicConfigurationServiceImpl());
 
         final ConfigurationFile configurationFile = ConfigurationFileProvider.get(systemInformation);
 
@@ -50,7 +52,9 @@ public class ConfigurationBootstrap {
                 new UsageStatisticsConfigurator(configurationService.usageStatisticsConfiguration()),
                 new MqttConfigurator(configurationService.mqttConfiguration()),
                 new ListenerConfigurator(configurationService.listenerConfiguration(), systemInformation),
-                new PersistenceConfigurator(configurationService.persistenceConfigurationService()));
+                new PersistenceConfigurator(configurationService.persistenceConfigurationService()),
+
+                new TopicConfigurator(configurationService.topicConfiguration()));
 
         configFileReader.applyConfig();
 
