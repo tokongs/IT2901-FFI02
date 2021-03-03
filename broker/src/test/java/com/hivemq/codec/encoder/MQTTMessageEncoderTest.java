@@ -15,8 +15,8 @@
  */
 package com.hivemq.codec.encoder;
 
+import com.hivemq.configuration.service.PriorityConfigurationService;
 import com.hivemq.configuration.service.SecurityConfigurationService;
-import com.hivemq.configuration.service.TopicConfigurationService;
 import com.hivemq.mqtt.message.PINGRESP;
 import com.hivemq.mqtt.message.ProtocolVersion;
 import com.hivemq.mqtt.message.QoS;
@@ -31,6 +31,7 @@ import com.hivemq.mqtt.message.pubrel.PUBREL;
 import com.hivemq.mqtt.message.reason.Mqtt5SubAckReasonCode;
 import com.hivemq.mqtt.message.suback.SUBACK;
 import com.hivemq.mqtt.message.unsuback.UNSUBACK;
+import com.hivemq.mqtt.topic.TopicMatcher;
 import com.hivemq.util.ChannelAttributes;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.embedded.EmbeddedChannel;
@@ -56,12 +57,19 @@ public class MQTTMessageEncoderTest {
     private SecurityConfigurationService securityConfigurationService;
 
     @Mock
-    private TopicConfigurationService topicConfigurationService;
+    private PriorityConfigurationService priorityConfigurationService;
+
+    @Mock
+    private TopicMatcher topicMatcher;
 
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        channel = new EmbeddedChannel(new TestMessageEncoder(messageDroppedService, securityConfigurationService, topicConfigurationService));
+        channel = new EmbeddedChannel(new TestMessageEncoder(
+                messageDroppedService,
+                securityConfigurationService,
+                priorityConfigurationService,
+                topicMatcher));
         channel.attr(ChannelAttributes.MQTT_VERSION).set(ProtocolVersion.MQTTv3_1);
     }
 
