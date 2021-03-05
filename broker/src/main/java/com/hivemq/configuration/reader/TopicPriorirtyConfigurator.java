@@ -17,18 +17,12 @@ package com.hivemq.configuration.reader;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.hivemq.configuration.entity.topic.PriorityEntity;
+import com.hivemq.configuration.entity.PriorityEntity;
 import com.hivemq.configuration.service.PriorityConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extensions.priority.PriorityClass;
 import com.hivemq.extensions.priority.TopicPriority;
-import com.hivemq.mqtt.message.QoS;
-import com.hivemq.mqtt.message.subscribe.Topic;
-import com.hivemq.mqtt.topic.TopicFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

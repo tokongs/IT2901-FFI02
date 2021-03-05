@@ -16,7 +16,6 @@
 package com.hivemq.configuration.entity;
 
 import com.hivemq.configuration.entity.listener.ListenerEntity;
-import com.hivemq.configuration.entity.topic.PriorityEntity;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 
 import javax.xml.bind.annotation.*;

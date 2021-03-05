@@ -15,19 +15,15 @@
  */
 package com.hivemq.configuration.service.impl;
 
-import com.google.common.collect.ImmutableList;
 import com.hivemq.configuration.service.PriorityConfigurationService;
 import com.hivemq.configuration.service.exception.ConfigurationValidationException;
 import com.hivemq.extensions.priority.TopicPriority;
-import com.hivemq.mqtt.message.subscribe.Topic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static com.hivemq.configuration.entity.topic.TopicConfigurationDefaults.*;
 
 import javax.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
 public class PriorityConfigurationServiceImpl implements PriorityConfigurationService {
