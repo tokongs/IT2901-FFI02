@@ -21,9 +21,9 @@ fun main(args: Array<String>) {
         .buildBlocking()
 
     client.connect()
-    client.subscribeWith().topicFilter("testtopic/1").qos(MqttQos.AT_MOST_ONCE).send()
-    client.publishWith().topic("testtopic/1").payload("Hei".toByteArray()).qos(MqttQos.AT_MOST_ONCE).send()
+    client.subscribeWith().topicFilter("routine/1").qos(MqttQos.AT_MOST_ONCE).send()
+    client.publishWith().topic("routine/1").payload("Hei".toByteArray()).qos(MqttQos.AT_MOST_ONCE).send()
 
-    client.publishWith().topic("nottesttopic/1").payload("Hei".toByteArray()).qos(MqttQos.AT_MOST_ONCE).send()
+    client.publishWith().topic("routine/1").payload("Hei1".toByteArray()).qos(MqttQos.AT_MOST_ONCE).send()
     client.disconnect()
 }

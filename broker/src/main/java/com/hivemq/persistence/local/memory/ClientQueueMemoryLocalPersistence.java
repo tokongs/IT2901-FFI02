@@ -65,8 +65,12 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
     private final @NotNull Map<String, Messages> @NotNull [] sharedBuckets;
 
     private static class Messages {
-        final @NotNull LinkedList<MessageWithID> qos1Or2Messages = new LinkedList<>();
-        final @NotNull LinkedList<PublishWithRetained> qos0Messages = new LinkedList<>();
+        final @NotNull PriorityQueue
+        <MessageWithID> qos1Or2Messages = new PriorityQueue
+        <>(1000, MessageWithIDComparator);
+        final @NotNull PriorityQueue
+        <PublishWithRetained> qos0Messages = new PriorityQueue
+        <>(1000, PublishWithRetainedComparator);
         int retainedQos1Or2Messages = 0;
         long qos0Memory = 0;
     }
@@ -888,5 +892,44 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
                     + ObjectMemoryEstimation.objectShellSize() // the object itself
                     + ObjectMemoryEstimation.booleanSize(); // retain flag
         }
+    }
+
+    public class MessageWithIDComparator implements Comparator<MessageWithID> {
+
+        @Override
+        public int compare(MessageWithID m1, MessageWithID m2) {
+            int m1Topic, m2Topic = null, null;
+            if(m1 instanceof PubrelWithRetained) {
+                final PublishWithRetained publish = (PublishWithRetained) m1;
+                m1Topic = (int) getTopicPriority(m1.getTopic())
+            } else if(m1 instanceof pubrelWithRetained) {
+                final PubrelWithRetained pubrel = (PubrelWithRetained) m1;
+                m1Topic = (int) getTopicPriority(m1.getTopic())
+            }
+
+            if(m2 instanceof PubrelWithRetained) {
+                final PublishWithRetained publish = (PublishWithRetained) m2;
+                m2Topic = (int) getTopicPriority(m2.getTopic())
+            } else if(m2 instanceof pubrelWithRetained) {
+                final PubrelWithRetained pubrel = (PubrelWithRetained) m2;
+                m2Topic = (int) getTopicPriority(m2.getTopic())
+            }
+
+            
+           return Integer.compare(m1Topic, m2Topic);
+        }
+    
+    }
+    public class PublishWithRetainedComparator implements Comparator<PublishWithRetained> {
+
+        @Override
+        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
+           return Integer.compare(getTopicPriority(p1.getTopic()), getTopicPriority(p2.getTopic()));
+        }
+    
+    }
+
+    private int getTopicPriority(String topic) {
+        return topic.substring(topic.length() - 1)
     }
 }
