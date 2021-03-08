@@ -67,10 +67,10 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
     private static class Messages {
         final @NotNull PriorityQueue
         <MessageWithID> qos1Or2Messages = new PriorityQueue
-        <>(1000, MessageWithIDComparator);
+        <>(new MessageWithIDComparator());
         final @NotNull PriorityQueue
         <PublishWithRetained> qos0Messages = new PriorityQueue
-        <>(1000, PublishWithRetainedComparator);
+        <>(new PublishWithRetainedComparator());
         int retainedQos1Or2Messages = 0;
         long qos0Memory = 0;
     }
@@ -462,10 +462,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         }
         final PubrelWithRetained pubrelWithRetained = new PubrelWithRetained(pubrel, retained);
         if (packetIdFound) {
-            messages.qos1Or2Messages.set(messageIndexInQueue, pubrelWithRetained);
-        } else {
-            // Ensure unknown PUBRELs are always first in queue
-            messages.qos1Or2Messages.addFirst(pubrelWithRetained);
+            messages.qos1Or2Messages.add(pubrelWithRetained);
         }
         increaseMessagesMemory(pubrelWithRetained.getEstimatedSize());
         return replacedId;
@@ -898,21 +895,25 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
 
         @Override
         public int compare(MessageWithID m1, MessageWithID m2) {
-            int m1Topic, m2Topic = null, null;
+            int m1Topic, m2Topic;
             if(m1 instanceof PubrelWithRetained) {
                 final PublishWithRetained publish = (PublishWithRetained) m1;
-                m1Topic = (int) getTopicPriority(m1.getTopic())
-            } else if(m1 instanceof pubrelWithRetained) {
-                final PubrelWithRetained pubrel = (PubrelWithRetained) m1;
-                m1Topic = (int) getTopicPriority(m1.getTopic())
+                m1Topic = getTopicPriority(publish.getTopic())
+            } else if(m1 instanceof PubrelWithRetained) {
+                System.out.print("this is pubrel" + m1);
+                m1Topic = 5;
+                // final PubrelWithRetained pubrel = (PubrelWithRetained) m1;
+                // m1Topic = getTopicPriority(pubrel.getTopic())
             }
 
             if(m2 instanceof PubrelWithRetained) {
                 final PublishWithRetained publish = (PublishWithRetained) m2;
-                m2Topic = (int) getTopicPriority(m2.getTopic())
-            } else if(m2 instanceof pubrelWithRetained) {
-                final PubrelWithRetained pubrel = (PubrelWithRetained) m2;
-                m2Topic = (int) getTopicPriority(m2.getTopic())
+                m2Topic = getTopicPriority(publish.getTopic())
+            } else if(m2 instanceof PubrelWithRetained) {
+                System.out.print("this is pubrel" + m2);
+                m2Topic = 5;
+                // final PubrelWithRetained pubrel = (PubrelWithRetained) m2;
+                // m2Topic = getTopicPriority(pubrel.getTopic())
             }
 
             
@@ -930,6 +931,6 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
     }
 
     private int getTopicPriority(String topic) {
-        return topic.substring(topic.length() - 1)
+        return Integer.parseInt(topic.substring(topic.length() - 1))
     }
 }
