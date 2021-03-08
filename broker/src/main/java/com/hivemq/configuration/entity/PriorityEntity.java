@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hivemq.configuration.entity.topic;
+package com.hivemq.configuration.entity;
 
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.annotations.Nullable;
-import com.hivemq.mqtt.message.QoS;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -27,45 +25,31 @@ import javax.xml.bind.annotation.XmlRootElement;
 /**
  * @author Christoffer Stensrud
  */
-@XmlRootElement(name = "topic")
+@XmlRootElement(name = "priority")
 @XmlAccessorType(XmlAccessType.NONE)
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-public class TopicEntity {
+public class PriorityEntity {
 
-    @XmlElement(name = "name")
-    private @Nullable String name;
-
-    @XmlElement(name = "qos-as-int", required = true)
-    private @NotNull int qosAsInt;
+    @XmlElement(name = "filter")
+    private @Nullable String filter;
 
     @XmlElement(name = "priority", required = true)
     private @NotNull int priority;
 
-    @XmlElement(name = "no-local", required = true)
-    private boolean noLocal;
-
-    @XmlElement(name = "retain-as-published", required = true)
-    private boolean retainAsPublished;
+    @XmlElement(name = "priority-class", required = true)
+    private String priorityClass;
 
 
 
-    public @Nullable String getName() {
-        return name;
-    }
-
-    public @NotNull int getQoS() {
-        return qosAsInt;
+    public @NotNull String getFilter() {
+        return filter;
     }
 
     public @NotNull int getPriority() {
         return priority;
     }
 
-    public boolean getNoLocal() {
-        return noLocal;
-    }
-
-    public boolean getRetainAsPublished() {
-        return retainAsPublished;
+    public String getPriorityClass() {
+        return priorityClass;
     }
 }

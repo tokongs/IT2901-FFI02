@@ -122,8 +122,8 @@ public class ConfigurationModuleTest {
     @Test
     public void test_topic_configuration_service_singleton() throws Exception {
 
-        final TopicConfigurationService instance = injector.getInstance(TopicConfigurationService.class);
-        final TopicConfigurationService instance2 = injector.getInstance(TopicConfigurationService.class);
+        final PriorityConfigurationService instance = injector.getInstance(PriorityConfigurationService.class);
+        final PriorityConfigurationService instance2 = injector.getInstance(PriorityConfigurationService.class);
 
         assertSame(instance, instance2);
         assertSame(testConfigurationBootstrap.getTopicConfigurationService(), instance);

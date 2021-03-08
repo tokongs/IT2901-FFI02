@@ -18,6 +18,7 @@ package com.hivemq.configuration.service;
 import com.hivemq.annotations.ReadOnly;
 import com.hivemq.configuration.service.entity.Listener;
 import com.hivemq.configuration.service.exception.ConfigurationValidationException;
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.mqtt.message.subscribe.Topic;
 import java.util.List;
 
@@ -27,36 +28,28 @@ import java.util.List;
  * @author Christoffer Stensrud
  *
  */
-public interface TopicConfigurationService {
+public interface PriorityConfigurationService {
 
     /**
-     * Adds a new Topic at runtime
+     * Adds a new Priority at runtime
      *
-     * @param topic    the topic
-     * @param <T>      the concrete topic subclass
-     * @throws ConfigurationValidationException if the validation of the topic wasn't successful
-     * @throws IllegalArgumentException
+     * @param priority    the priority
+     * @throws ConfigurationValidationException if the validation of the priority wasn't successful
      */
-    <T extends Topic> void addTopic(final T topic) throws ConfigurationValidationException, IllegalArgumentException;
+    void addPriority(final TopicPriority priority) throws ConfigurationValidationException;
 
     /**
-     * @return an unmodifiable list of all available topics
+     * @return an unmodifiable list of all available priorities
      */
     @ReadOnly
-    List<Topic> getTopics();
+    List<TopicPriority> getPriorities();
 
 
 
 
 
 
-    /**
-     * @return an integer that specifies max topics
-     * UNUSED
-     */
-    int maxTopics();
 
-    void setMaxTopics(final int maxTopics);
 }
 
 

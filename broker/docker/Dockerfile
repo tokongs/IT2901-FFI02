@@ -1,8 +1,11 @@
 # We use multi-stage here to unzip in an initial layer so we don't have to COPY and then RUN unzip (two layers). ADD can lead to larger layers as well.
-FROM gradle:6.8.2-jdk11 AS build
+FROM gradle:6.3-jdk11 AS build
 
 WORKDIR /home/gradle/broker
-RUN git clone https://github.com/hivemq/hivemq-extension-sdk.git ../hivemq-extension-sdk
+RUN git clone https://github.com/hivemq/hivemq-extension-sdk.git ../hivemq-extension-sdk \
+    && cd ../hivemq-extension-sdk \
+    && git reset --hard 56fd3489107934ac073c53adbc6a1709ec5c34ce
+
 
 COPY build.gradle .
 COPY gradle.properties .

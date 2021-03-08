@@ -52,7 +52,7 @@ public class AbstractConfigurationTest {
     UsageStatisticsConfig usageStatisticsConfig;
     SystemInformation systemInformation;
     PersistenceConfigurationService persistenceConfigurationService;
-    TopicConfigurationService topicConfigurationService;
+    PriorityConfigurationService priorityConfigurationService;
 
     @Before
     public void setUp() throws Exception {
@@ -66,7 +66,7 @@ public class AbstractConfigurationTest {
         usageStatisticsConfig = new UsageStatisticsConfigImpl();
         systemInformation = new SystemInformationImpl(false);
         persistenceConfigurationService = new PersistenceConfigurationServiceImpl();
-        topicConfigurationService = new TopicConfigurationServiceImpl();
+        priorityConfigurationService = new PriorityConfigurationServiceImpl();
 
         when(envVarUtil.replaceEnvironmentVariablePlaceholders(anyString())).thenCallRealMethod();
         final ConfigurationFile configurationFile = new ConfigurationFile(xmlFile);
@@ -80,7 +80,7 @@ public class AbstractConfigurationTest {
                 new MqttConfigurator(mqttConfigurationService),
                 new ListenerConfigurator(listenerConfigurationService, systemInformation),
                 new PersistenceConfigurator(persistenceConfigurationService),
-                new TopicConfigurator(topicConfigurationService));
+                new TopicPriorirtyConfigurator(priorityConfigurationService));
     }
 
 }

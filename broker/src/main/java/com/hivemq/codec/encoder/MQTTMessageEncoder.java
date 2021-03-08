@@ -17,12 +17,14 @@
 package com.hivemq.codec.encoder;
 
 import com.google.inject.Inject;
-import com.hivemq.configuration.service.TopicConfigurationService;
+import com.hivemq.configuration.service.PriorityConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.metrics.handler.GlobalMQTTMessageCounter;
 import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.publish.PUBLISH;
 import com.hivemq.mqtt.message.subscribe.Topic;
+import com.hivemq.mqtt.topic.TopicMatcher;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -39,20 +41,23 @@ public class MQTTMessageEncoder extends MessageToByteEncoder<Message> {
 
     private final @NotNull EncoderFactory encoderFactory;
     private final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter;
-    private final @NotNull TopicConfigurationService topicConfigurationService;
-    private final int ROUTINE_BIT_MASK = 231;       //11100111
-    private final int PRIORITY_BIT_MASK = 239;      //11101111
-    private final int IMMEDIATE_BIT_MASK = 247;     //11110111
-    private final int FLASH_BIT_MASK = 255;         //11111111
+    private final @NotNull PriorityConfigurationService PriorityConfigurationService;
+    private final @NotNull TopicMatcher topicMatcher;
+    private final int ROUTINE_BIT_MASK = 0b11100111;
+    private final int PRIORITY_BIT_MASK = 0b11101111;
+    private final int IMMEDIATE_BIT_MASK = 0b11110111;
+    private final int FLASH_BIT_MASK = 0b11111111;
 
     @Inject
     public MQTTMessageEncoder(
             final @NotNull EncoderFactory encoderFactory,
             final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter,
-            final @NotNull TopicConfigurationService topicConfigurationService) {
+            final @NotNull PriorityConfigurationService PriorityConfigurationService,
+            final @NotNull TopicMatcher topicMatcher) {
         this.encoderFactory = encoderFactory;
         this.globalMQTTMessageCounter = globalMQTTMessageCounter;
-        this.topicConfigurationService = topicConfigurationService;
+        this.PriorityConfigurationService = PriorityConfigurationService;
+        this.topicMatcher = topicMatcher;
     }
 
     @Override
@@ -78,25 +83,28 @@ public class MQTTMessageEncoder extends MessageToByteEncoder<Message> {
 
     public void setTosValue(@NotNull final ChannelHandlerContext ctx, @NotNull final PUBLISH message){
         final String topic = message.getTopic() ;
-        topicConfigurationService.getTopics();
+        PriorityConfigurationService.getPriorities();
         try {
             final int prevTos = ((SocketChannelConfig) ctx.channel().config()).getTrafficClass();
             ((SocketChannelConfig) ctx.channel().config()).setTrafficClass(prevTos & ROUTINE_BIT_MASK);
-            for (Topic t : topicConfigurationService.getTopics()) {
-                if (t.getTopic().equals(topic)) {
-                    final int priority = t.getPriority();
-                    if (priority < 200) {
-                        ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & PRIORITY_BIT_MASK);
-                    } else if (priority < 300) {
-                        ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & IMMEDIATE_BIT_MASK);
-                    } else {
-                        ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & FLASH_BIT_MASK);
+            for (TopicPriority priority : PriorityConfigurationService.getPriorities()) {
+                if (topicMatcher.matches(priority.getTopicFilter(), topic)) {
+                    switch (priority.getPriorityClass()) {
+                        case PRIORITY:
+                            ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & PRIORITY_BIT_MASK);
+                            return;
+                        case IMMEDIATE:
+                            ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & IMMEDIATE_BIT_MASK);
+                            return;
+                        case FLASH:
+                            ((SocketChannelConfig) ctx.channel().config()).setTrafficClass((prevTos | 24) & FLASH_BIT_MASK);
+                            return;
                     }
                 }
             }
         } catch (ClassCastException e){
             Logger log = Logger.getLogger("MQTTMessageEncoder");
-            log.info("Faild to set traffic class... (ClassCastException)");
+            log.info("Failed to set traffic class... (ClassCastException)");
         }
 
     }

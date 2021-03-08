@@ -20,7 +20,6 @@ import com.google.inject.Singleton;
 import com.hivemq.codec.encoder.mqtt3.*;
 import com.hivemq.codec.encoder.mqtt5.*;
 import com.hivemq.configuration.service.SecurityConfigurationService;
-import com.hivemq.configuration.service.TopicConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.annotations.Nullable;
 import com.hivemq.mqtt.handler.disconnect.MqttServerDisconnector;

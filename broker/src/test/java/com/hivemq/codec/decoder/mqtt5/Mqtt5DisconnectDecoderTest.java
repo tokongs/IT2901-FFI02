@@ -17,14 +17,16 @@ package com.hivemq.codec.decoder.mqtt5;
 
 import com.google.common.collect.ImmutableList;
 import com.hivemq.configuration.service.FullConfigurationService;
+import com.hivemq.configuration.service.PriorityConfigurationService;
 import com.hivemq.configuration.service.SecurityConfigurationService;
-import com.hivemq.configuration.service.TopicConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.mqtt.message.ProtocolVersion;
 import com.hivemq.mqtt.message.disconnect.DISCONNECT;
 import com.hivemq.mqtt.message.dropping.MessageDroppedService;
 import com.hivemq.mqtt.message.mqtt5.MqttUserProperty;
 import com.hivemq.mqtt.message.reason.Mqtt5DisconnectReasonCode;
+import com.hivemq.mqtt.message.subscribe.Topic;
+import com.hivemq.mqtt.topic.TopicMatcher;
 import com.hivemq.util.ChannelAttributes;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.UnpooledByteBufAllocator;
@@ -52,7 +54,10 @@ public class Mqtt5DisconnectDecoderTest extends AbstractMqtt5DecoderTest {
     private SecurityConfigurationService securityConfigurationService;
 
     @Mock
-    private TopicConfigurationService topicConfigurationService;
+    private PriorityConfigurationService priorityConfigurationService;
+
+    @Mock
+    private TopicMatcher topicMatcher;
 
     @Before
     public void before() {
@@ -158,7 +163,11 @@ public class Mqtt5DisconnectDecoderTest extends AbstractMqtt5DecoderTest {
 
         //Now Encode
 
-        channel = new EmbeddedChannel(new TestMessageEncoder(messageDroppedService, securityConfigurationService, topicConfigurationService));
+        channel = new EmbeddedChannel(new TestMessageEncoder(
+                messageDroppedService,
+                securityConfigurationService,
+                priorityConfigurationService,
+                topicMatcher));
         channel.config().setAllocator(new UnpooledByteBufAllocator(false));
         channel.attr(ChannelAttributes.MQTT_VERSION).set(ProtocolVersion.MQTTv5);
 

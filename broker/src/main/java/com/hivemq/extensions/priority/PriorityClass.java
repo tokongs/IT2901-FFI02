@@ -13,18 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hivemq.configuration.entity.topic;
 
-import com.hivemq.codec.encoder.mqtt5.UnsignedDataTypes;
+package com.hivemq.extensions.priority;
 
-/**
- * @author Christoffer Stensrud
- * Currently UNUSED
- */
-public class TopicConfigurationDefaults {
-
-    public static final int MAX_TOPICS_DEFAULT = 8;
-    public static final int MAX_TOPICS_MINIMUM = 1;
-    public static final int MAX_TOPICS_MAXIMUM = UnsignedDataTypes.UNSIGNED_SHORT_MAX_VALUE;
-
+public enum PriorityClass {
+    ROUTINE, PRIORITY, IMMEDIATE, FLASH
 }

@@ -28,6 +28,6 @@ public interface FullConfigurationService extends ConfigurationService {
 
     PersistenceConfigurationService persistenceConfigurationService();
 
-    TopicConfigurationService topicConfiguration();
+    PriorityConfigurationService topicConfiguration();
 
 }
