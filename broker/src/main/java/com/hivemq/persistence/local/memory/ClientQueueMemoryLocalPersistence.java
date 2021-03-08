@@ -898,7 +898,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
             int m1Topic, m2Topic;
             if(m1 instanceof PublishWithRetained) {
                 final PublishWithRetained publish = (PublishWithRetained) m1;
-                m1Topic = getTopicPriority(publish.getTopic())
+                m1Topic = getTopicPriority(publish.getTopic());
             } else if(m1 instanceof PubrelWithRetained) {
                 System.out.print("this is pubrel" + m1);
                 m1Topic = 5;
@@ -908,7 +908,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
 
             if(m2 instanceof PublishWithRetained) {
                 final PublishWithRetained publish = (PublishWithRetained) m2;
-                m2Topic = getTopicPriority(publish.getTopic())
+                m2Topic = getTopicPriority(publish.getTopic());
             } else if(m2 instanceof PubrelWithRetained) {
                 System.out.print("this is pubrel" + m2);
                 m2Topic = 5;
@@ -930,7 +930,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
     
     }
 
-    private int getTopicPriority(String topic) {
-        return Integer.parseInt(topic.substring(topic.length() - 1))
+    private static int getTopicPriority(String topic) {
+        return Integer.parseInt(topic.substring(topic.length() - 1));
     }
 }
