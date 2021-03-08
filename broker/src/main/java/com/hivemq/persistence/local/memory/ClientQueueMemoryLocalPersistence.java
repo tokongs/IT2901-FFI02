@@ -891,12 +891,12 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         }
     }
 
-    public class MessageWithIDComparator implements Comparator<MessageWithID> {
+    private static class MessageWithIDComparator implements Comparator<MessageWithID> {
 
         @Override
         public int compare(MessageWithID m1, MessageWithID m2) {
             int m1Topic, m2Topic;
-            if(m1 instanceof PubrelWithRetained) {
+            if(m1 instanceof PublishWithRetained) {
                 final PublishWithRetained publish = (PublishWithRetained) m1;
                 m1Topic = getTopicPriority(publish.getTopic())
             } else if(m1 instanceof PubrelWithRetained) {
@@ -906,7 +906,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
                 // m1Topic = getTopicPriority(pubrel.getTopic())
             }
 
-            if(m2 instanceof PubrelWithRetained) {
+            if(m2 instanceof PublishWithRetained) {
                 final PublishWithRetained publish = (PublishWithRetained) m2;
                 m2Topic = getTopicPriority(publish.getTopic())
             } else if(m2 instanceof PubrelWithRetained) {
@@ -921,7 +921,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         }
     
     }
-    public class PublishWithRetainedComparator implements Comparator<PublishWithRetained> {
+    private static class PublishWithRetainedComparator implements Comparator<PublishWithRetained> {
 
         @Override
         public int compare(PublishWithRetained p1, PublishWithRetained p2) {
