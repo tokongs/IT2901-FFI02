@@ -895,7 +895,8 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
 
         @Override
         public int compare(MessageWithID m1, MessageWithID m2) {
-            int m1Topic, m2Topic;
+            int m1Topic = 5;
+            int m2Topic = 5;
             if(m1 instanceof PublishWithRetained) {
                 final PublishWithRetained publish = (PublishWithRetained) m1;
                 m1Topic = getTopicPriority(publish.getTopic());
