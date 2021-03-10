@@ -12,3 +12,7 @@ out/
 
 .java-version
 .DS_Store
+
+.project
+.classpath
+.settings/org.eclipse.buildship.core.prefs
