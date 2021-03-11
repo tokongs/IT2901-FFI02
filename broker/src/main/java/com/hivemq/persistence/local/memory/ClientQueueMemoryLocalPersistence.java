@@ -27,7 +27,9 @@ import com.hivemq.configuration.service.InternalConfigurations;
 import com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.annotations.Nullable;
+import com.hivemq.extension.sdk.api.services.publish.Publish;
 import com.hivemq.metrics.HiveMQMetrics;
+import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.MessageWithID;
 import com.hivemq.mqtt.message.QoS;
 import com.hivemq.mqtt.message.dropping.MessageDroppedService;
@@ -45,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.hivemq.configuration.service.InternalConfigurations.QOS_0_MEMORY_HARD_LIMIT_DIVISOR;
@@ -182,30 +185,52 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
             if (publish.getQoS() == QoS.AT_MOST_ONCE) {
                 addQos0Publish(queueId, shared, messages, publishWithRetained);
             } else {
+                PublishWithRetainedComparator pwrC = new PublishWithRetainedComparator();
+
                 final int qos1And2QueueSize = messages.qos1Or2Messages.size() - messages.retainedQos1Or2Messages;
                 if ((qos1And2QueueSize >= max) && !retained) {
                     if (strategy == QueuedMessagesStrategy.DISCARD) {
                         logAndDecrementPayloadReference(publish, shared, queueId);
                         continue;
                     } else {
-                        final boolean discarded = discardOldest(queueId, shared, messages, false);
-                        if (!discarded) {
-                            //discard this message if no old could be discarded
-                            logAndDecrementPayloadReference(publish, shared, queueId);
-                            continue;
+
+                        int result = pwrC.compare((PublishWithRetained) publish, Objects.requireNonNull(getLowestPriorityMessage(messages, false)));
+                        switch (result){
+                            case 1: // publish is lower prioritized
+                                logAndDecrementPayloadReference(publish, shared, queueId);
+                                continue;
+                            case -1: // publish is higher prioritized
+                            case 0: // publish is equally prioritized
+                                final boolean discarded = discardLowestPriority(queueId, shared, messages, false);
+                                if (!discarded) {
+                                    //then something horrible has happened,
+                                    throw new IllegalStateException("A message has been found, " +
+                                            "but later the same message cannot be found.");
+                                }
                         }
+
                     }
                 } else if ((messages.retainedQos1Or2Messages >= retainedMessageMax) && retained) {
                     if (strategy == QueuedMessagesStrategy.DISCARD) {
                         logAndDecrementPayloadReference(publish, shared, queueId);
                         continue;
                     } else {
-                        final boolean discarded = discardOldest(queueId, shared, messages, true);
-                        if (!discarded) {
-                            //discard this message if no old could be discarded
-                            logAndDecrementPayloadReference(publish, shared, queueId);
-                            continue;
+
+                        int result = pwrC.compare((PublishWithRetained) publish, Objects.requireNonNull(getLowestPriorityMessage(messages, false)));
+                        switch (result){
+                            case 1: // publish is lower prioritized
+                                logAndDecrementPayloadReference(publish, shared, queueId);
+                                continue;
+                            case -1: // publish is higher prioritized
+                            case 0: // publish is equally prioritized
+                                final boolean discarded = discardLowestPriority(queueId, shared, messages, true);
+                                if (!discarded) {
+                                    //then something horrible has happened,
+                                    throw new IllegalStateException("A message has been found, " +
+                                            "but later the same message cannot be found.");
+                                }
                         }
+
                     }
                 } else {
                     if (retained) {
@@ -763,6 +788,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
     }
 
     /**
+     * TODO: Remove if necessary, might not need. Currently unused.
      * @return true if a message was discarded, else false
      */
     private boolean discardOldest(
@@ -793,6 +819,95 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         }
         return false;
 
+    }
+
+
+    /**
+     * Gets the lowest priority message among messages.
+     *
+     * @param messages      the messages to search amongst
+     * @param retainedOnly  something about subscribe
+     * @return  the lowest priority message
+     */
+    private PublishWithRetained getLowestPriorityMessage(
+            final @NotNull Messages messages,
+            final boolean retainedOnly) {
+
+        if (messages.qos0Messages.isEmpty()){
+            return null;
+        }
+
+        PublishWithRetained[] qos0messagesArray = (PublishWithRetained[]) messages.qos0Messages.toArray();
+        MessageWithID[] qos1or2messagesArray = (MessageWithID[]) Arrays.stream(messages.qos1Or2Messages.toArray())
+                .filter(m -> m instanceof MessageWithID)
+                .toArray(); // array of only QoS1 messages.
+
+        Collections.reverse(Arrays.asList(qos0messagesArray));
+        Collections.reverse(Arrays.asList(qos1or2messagesArray));
+
+        PublishWithRetained lowestPrioritizedQoS0 = qos0messagesArray[0];
+        Optional<PublishWithRetained> lowestPrioritizedQoS1Opt = Arrays.stream(qos1or2messagesArray)
+                .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
+                .map(m -> (PublishWithRetained) m)
+                .filter(m -> !((retainedOnly && !m.retained) || (!retainedOnly && m.retained)))
+                .findFirst();
+
+        if(lowestPrioritizedQoS1Opt.isPresent()){ //if QoS1 is present compare them
+            PublishWithRetainedComparator pwrC = new PublishWithRetainedComparator();
+            PublishWithRetained lowestPrioritizedQoS1 = lowestPrioritizedQoS1Opt.get();
+
+            int result = pwrC.compare(lowestPrioritizedQoS0, lowestPrioritizedQoS1);
+            switch(result){
+                case 1: //  qos0 is lower prioritized
+                    return lowestPrioritizedQoS0;
+                case -1: // qos0 is higher prioritized
+                    return lowestPrioritizedQoS1;
+                case 0: // qos0 is equally prioritized
+                    PublishWithRetainedTimeComparator timeComparator = new PublishWithRetainedTimeComparator();
+
+                    int timeResult = timeComparator.compare(lowestPrioritizedQoS0, lowestPrioritizedQoS1);
+
+                    switch (timeResult){
+                        case -1:
+                            return lowestPrioritizedQoS0;
+                        case 1:
+                        case 0:
+                            return lowestPrioritizedQoS1;
+                    }
+                    break;
+            }
+        }else { //if QoS1 is not present, return QoS0
+            return lowestPrioritizedQoS0;
+        }
+
+        return null;
+    }
+
+
+    /**
+     * @return true if a message was discarded, else false
+     */
+    private boolean discardLowestPriority(
+            final @NotNull String queueId,
+            final boolean shared,
+            final @NotNull Messages messages,
+            final boolean retainedOnly) {
+
+        PublishWithRetained lowestPrioritizedMessage = getLowestPriorityMessage(messages, retainedOnly);
+
+        if (lowestPrioritizedMessage == null){
+            return false;
+        }else if(messages.qos0Messages.contains(lowestPrioritizedMessage)){
+            logAndDecrementPayloadReference(lowestPrioritizedMessage, shared, queueId);
+            messages.qos0Messages.remove(lowestPrioritizedMessage);
+            return true;
+        }else if(messages.qos1Or2Messages.contains(lowestPrioritizedMessage)){
+            logAndDecrementPayloadReference(lowestPrioritizedMessage, shared, queueId);
+            messages.qos1Or2Messages.remove(lowestPrioritizedMessage);
+            return true;
+        }
+
+        return false;
     }
 
     private void logAndDecrementPayloadReference(
@@ -891,6 +1006,9 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         }
     }
 
+    /**
+     * Qos1 or Qos2 Message Comparator
+     */
     private static class MessageWithIDComparator implements Comparator<MessageWithID> {
 
         @Override
@@ -922,6 +1040,10 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         }
     
     }
+
+    /**
+     * Qos0 Message Comparator
+     */
     private static class PublishWithRetainedComparator implements Comparator<PublishWithRetained> {
 
         @Override
@@ -933,5 +1055,14 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
 
     private static int getTopicPriority(String topic) {
         return Integer.parseInt(topic.substring(topic.length() - 1));
+    }
+
+    private static class PublishWithRetainedTimeComparator implements Comparator<PublishWithRetained> {
+
+        @Override
+        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
+            return Long.compare(p1.getTimestamp(), p2.getTimestamp());
+        }
+
     }
 }
