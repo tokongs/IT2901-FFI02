@@ -17,8 +17,8 @@ package com.hivemq.configuration.reader;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.hivemq.configuration.entity.PriorityEntity;
-import com.hivemq.configuration.service.PriorityConfigurationService;
+import com.hivemq.configuration.entity.TopicPriorityEntity;
+import com.hivemq.configuration.service.TopicPriorityConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extensions.priority.PriorityClass;
 import com.hivemq.extensions.priority.TopicPriority;
@@ -32,26 +32,26 @@ import java.util.List;
  */
 public class TopicPriorirtyConfigurator {
 
-    private final @NotNull PriorityConfigurationService priorityConfigurationService;
+    private final @NotNull TopicPriorityConfigurationService topicPriorityConfigurationService;
 
     @Inject
-    public TopicPriorirtyConfigurator(final @NotNull PriorityConfigurationService priorityConfigurationService){
-        this.priorityConfigurationService = priorityConfigurationService;
+    public TopicPriorirtyConfigurator(final @NotNull TopicPriorityConfigurationService topicPriorityConfigurationService){
+        this.topicPriorityConfigurationService = topicPriorityConfigurationService;
     }
 
-    void setTopicPriorityConfig(final @NotNull List<PriorityEntity> entities) {
+    void setTopicPriorityConfig(final @NotNull List<TopicPriorityEntity> entities) {
         final ImmutableList<TopicPriority> priorities = convertPriorityEntities(entities);
 
         for (final TopicPriority priority : priorities) {
-            priorityConfigurationService.addPriority(priority);
+            topicPriorityConfigurationService.addPriority(priority);
         }
 
 
     }
-    private @NotNull ImmutableList<TopicPriority> convertPriorityEntities(final @NotNull List<PriorityEntity> entities) {
+    private @NotNull ImmutableList<TopicPriority> convertPriorityEntities(final @NotNull List<TopicPriorityEntity> entities) {
         final ImmutableList.Builder<TopicPriority> builder = ImmutableList.builder();
 
-        for (final PriorityEntity entity : entities) {
+        for (final TopicPriorityEntity entity : entities) {
             final TopicPriority priority = convertPriority(entity);
             if (priority != null) {
                 builder.add(priority);
@@ -61,7 +61,7 @@ public class TopicPriorirtyConfigurator {
         return builder.build();
     }
 
-    @NotNull TopicPriority convertPriority(final @NotNull PriorityEntity entity) {
+    @NotNull TopicPriority convertPriority(final @NotNull TopicPriorityEntity entity) {
         return new TopicPriority(
                 entity.getFilter(),
                 PriorityClass.valueOf(entity.getPriorityClass()),

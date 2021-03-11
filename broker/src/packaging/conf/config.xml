@@ -1,0 +1,19 @@
+<hivemq>
+    <listeners>
+        <tcp-listener>
+            <port>1883</port>
+            <bind-address>0.0.0.0</bind-address>
+        </tcp-listener>
+    </listeners>
+    <persistence>
+        <mode>in-memory</mode>
+    </persistence>
+
+    <priorities>
+        <priority>
+            <filter>testtopic/#</filter>
+            <priority>100</priority>
+            <priority-class>FLASH</priority-class>
+        </priority>
+    </priorities>
+</hivemq>

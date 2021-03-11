@@ -15,7 +15,7 @@
  */
 package com.hivemq.configuration.service.impl;
 
-import com.hivemq.configuration.service.PriorityConfigurationService;
+import com.hivemq.configuration.service.TopicPriorityConfigurationService;
 import com.hivemq.configuration.service.exception.ConfigurationValidationException;
 import com.hivemq.extensions.priority.TopicPriority;
 import org.slf4j.Logger;
@@ -26,10 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
-public class PriorityConfigurationServiceImpl implements PriorityConfigurationService {
+public class TopicPriorityConfigurationServiceImpl implements TopicPriorityConfigurationService {
 
-    private static final Logger log = LoggerFactory.getLogger(PriorityConfigurationServiceImpl.class);
-
+    private static final Logger log = LoggerFactory.getLogger(TopicPriorityConfigurationServiceImpl.class);
 
     /**
      * The actual topic. Maybe make it a COWAL?

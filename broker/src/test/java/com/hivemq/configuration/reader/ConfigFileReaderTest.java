@@ -63,7 +63,7 @@ public class ConfigFileReaderTest {
      * Added by Christoffer Stensrud
      */
     @Mock
-    private PriorityConfigurationService priorityConfigurationService;
+    private TopicPriorityConfigurationService topicPriorityConfigurationService;
 
     ConfigFileReader reader;
 
@@ -86,7 +86,7 @@ public class ConfigFileReaderTest {
                 /**
                  * Added by Christoffer Stensrud
                  */
-                new TopicPriorirtyConfigurator(priorityConfigurationService));
+                new TopicPriorirtyConfigurator(topicPriorityConfigurationService));
     }
 
     @Test

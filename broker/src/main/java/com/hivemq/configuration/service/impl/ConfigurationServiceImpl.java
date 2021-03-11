@@ -34,7 +34,7 @@ public class ConfigurationServiceImpl implements FullConfigurationService {
     private final UsageStatisticsConfig usageStatisticsConfig;
     private final PersistenceConfigurationService persistenceConfigurationService;
 
-    private final PriorityConfigurationService priorityConfigurationService;
+    private final TopicPriorityConfigurationService topicPriorityConfigurationService;
 
     public ConfigurationServiceImpl(
             final ListenerConfigurationService listenerConfigurationService,
@@ -44,7 +44,7 @@ public class ConfigurationServiceImpl implements FullConfigurationService {
             final UsageStatisticsConfig usageStatisticsConfig,
             final PersistenceConfigurationService persistenceConfigurationService,
 
-            final PriorityConfigurationServiceImpl topicConfigurationService) {
+            final TopicPriorityConfigurationServiceImpl topicConfigurationService) {
 
         this.listenerConfigurationService = listenerConfigurationService;
         this.mqttConfigurationService = mqttConfigurationService;
@@ -53,7 +53,7 @@ public class ConfigurationServiceImpl implements FullConfigurationService {
         this.usageStatisticsConfig = usageStatisticsConfig;
         this.persistenceConfigurationService = persistenceConfigurationService;
 
-        this.priorityConfigurationService = topicConfigurationService;
+        this.topicPriorityConfigurationService = topicConfigurationService;
     }
 
     @Override
@@ -87,7 +87,7 @@ public class ConfigurationServiceImpl implements FullConfigurationService {
     }
 
     @Override
-    public PriorityConfigurationService topicConfiguration() {
-        return priorityConfigurationService;
+    public TopicPriorityConfigurationService topicConfiguration() {
+        return topicPriorityConfigurationService;
     }
 }

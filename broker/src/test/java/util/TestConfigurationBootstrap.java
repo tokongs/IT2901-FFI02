@@ -34,7 +34,7 @@ public class TestConfigurationBootstrap {
     private final UsageStatisticsConfig usageStatisticsConfig;
     private final PersistenceConfigurationService persistenceConfigurationService;
 
-    private final PriorityConfigurationServiceImpl topicConfigurationService;
+    private final TopicPriorityConfigurationServiceImpl topicConfigurationService;
 
     public TestConfigurationBootstrap() {
         listenerConfigurationService = new ListenerConfigurationServiceImpl();
@@ -44,7 +44,7 @@ public class TestConfigurationBootstrap {
         usageStatisticsConfig = new UsageStatisticsConfigImpl();
         persistenceConfigurationService = new PersistenceConfigurationServiceImpl();
 
-        topicConfigurationService = new PriorityConfigurationServiceImpl();
+        topicConfigurationService = new TopicPriorityConfigurationServiceImpl();
 
         configurationService = new ConfigurationServiceImpl(
                 listenerConfigurationService,
@@ -101,7 +101,7 @@ public class TestConfigurationBootstrap {
         return persistenceConfigurationService;
     }
 
-    public PriorityConfigurationServiceImpl getTopicConfigurationService() {
+    public TopicPriorityConfigurationServiceImpl getTopicConfigurationService() {
         return topicConfigurationService;
     }
 }

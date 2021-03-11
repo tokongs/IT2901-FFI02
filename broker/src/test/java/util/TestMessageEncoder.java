@@ -21,7 +21,7 @@ import com.hivemq.codec.encoder.EncoderFactory;
 import com.hivemq.codec.encoder.FixedSizeMessageEncoder;
 import com.hivemq.codec.encoder.MQTTMessageEncoder;
 import com.hivemq.configuration.HivemqId;
-import com.hivemq.configuration.service.PriorityConfigurationService;
+import com.hivemq.configuration.service.TopicPriorityConfigurationService;
 import com.hivemq.configuration.service.SecurityConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.logging.EventLog;
@@ -49,7 +49,7 @@ public class TestMessageEncoder extends MQTTMessageEncoder {
     public TestMessageEncoder(
             final MessageDroppedService messageDroppedService,
             final SecurityConfigurationService securityConfigurationService,
-            final PriorityConfigurationService priorityConfigurationService,
+            final TopicPriorityConfigurationService topicPriorityConfigurationService,
             final TopicMatcher topicMatcher) {
         super(
                 new EncoderFactory(
@@ -57,7 +57,7 @@ public class TestMessageEncoder extends MQTTMessageEncoder {
                         securityConfigurationService,
                         new MqttServerDisconnectorImpl(new EventLog(), new HivemqId())),
                 new GlobalMQTTMessageCounter(new MetricsHolder(new MetricRegistry())),
-                priorityConfigurationService, topicMatcher);
+                topicPriorityConfigurationService, topicMatcher);
         pingreqEncoder = new PingreqEncoder();
     }
 
