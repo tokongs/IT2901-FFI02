@@ -28,7 +28,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement(name = "priority")
 @XmlAccessorType(XmlAccessType.NONE)
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-public class PriorityEntity {
+public class TopicPriorityEntity {
 
     @XmlElement(name = "filter")
     private @Nullable String filter;

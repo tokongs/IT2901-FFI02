@@ -40,7 +40,7 @@ public class ConfigurationBootstrap {
                 new UsageStatisticsConfigImpl(),
                 new PersistenceConfigurationServiceImpl(),
 
-                new PriorityConfigurationServiceImpl());
+                new TopicPriorityConfigurationServiceImpl());
 
         final ConfigurationFile configurationFile = ConfigurationFileProvider.get(systemInformation);
 

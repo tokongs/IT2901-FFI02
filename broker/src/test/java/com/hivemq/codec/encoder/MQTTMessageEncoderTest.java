@@ -15,7 +15,7 @@
  */
 package com.hivemq.codec.encoder;
 
-import com.hivemq.configuration.service.PriorityConfigurationService;
+import com.hivemq.configuration.service.TopicPriorityConfigurationService;
 import com.hivemq.configuration.service.SecurityConfigurationService;
 import com.hivemq.mqtt.message.PINGRESP;
 import com.hivemq.mqtt.message.ProtocolVersion;
@@ -57,7 +57,7 @@ public class MQTTMessageEncoderTest {
     private SecurityConfigurationService securityConfigurationService;
 
     @Mock
-    private PriorityConfigurationService priorityConfigurationService;
+    private TopicPriorityConfigurationService topicPriorityConfigurationService;
 
     @Mock
     private TopicMatcher topicMatcher;
@@ -68,7 +68,7 @@ public class MQTTMessageEncoderTest {
         channel = new EmbeddedChannel(new TestMessageEncoder(
                 messageDroppedService,
                 securityConfigurationService,
-                priorityConfigurationService,
+                topicPriorityConfigurationService,
                 topicMatcher));
         channel.attr(ChannelAttributes.MQTT_VERSION).set(ProtocolVersion.MQTTv3_1);
     }

@@ -17,13 +17,12 @@
 package com.hivemq.codec.encoder;
 
 import com.google.inject.Inject;
-import com.hivemq.configuration.service.PriorityConfigurationService;
+import com.hivemq.configuration.service.TopicPriorityConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.metrics.handler.GlobalMQTTMessageCounter;
 import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.publish.PUBLISH;
-import com.hivemq.mqtt.message.subscribe.Topic;
 import com.hivemq.mqtt.topic.TopicMatcher;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -41,7 +40,7 @@ public class MQTTMessageEncoder extends MessageToByteEncoder<Message> {
 
     private final @NotNull EncoderFactory encoderFactory;
     private final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter;
-    private final @NotNull PriorityConfigurationService PriorityConfigurationService;
+    private final @NotNull TopicPriorityConfigurationService TopicPriorityConfigurationService;
     private final @NotNull TopicMatcher topicMatcher;
     private final int ROUTINE_BIT_MASK = 0b11100111;
     private final int PRIORITY_BIT_MASK = 0b11101111;
@@ -52,11 +51,11 @@ public class MQTTMessageEncoder extends MessageToByteEncoder<Message> {
     public MQTTMessageEncoder(
             final @NotNull EncoderFactory encoderFactory,
             final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter,
-            final @NotNull PriorityConfigurationService PriorityConfigurationService,
+            final @NotNull TopicPriorityConfigurationService TopicPriorityConfigurationService,
             final @NotNull TopicMatcher topicMatcher) {
         this.encoderFactory = encoderFactory;
         this.globalMQTTMessageCounter = globalMQTTMessageCounter;
-        this.PriorityConfigurationService = PriorityConfigurationService;
+        this.TopicPriorityConfigurationService = TopicPriorityConfigurationService;
         this.topicMatcher = topicMatcher;
     }
 
@@ -83,11 +82,11 @@ public class MQTTMessageEncoder extends MessageToByteEncoder<Message> {
 
     public void setTosValue(@NotNull final ChannelHandlerContext ctx, @NotNull final PUBLISH message){
         final String topic = message.getTopic() ;
-        PriorityConfigurationService.getPriorities();
+        TopicPriorityConfigurationService.getPriorities();
         try {
             final int prevTos = ((SocketChannelConfig) ctx.channel().config()).getTrafficClass();
             ((SocketChannelConfig) ctx.channel().config()).setTrafficClass(prevTos & ROUTINE_BIT_MASK);
-            for (TopicPriority priority : PriorityConfigurationService.getPriorities()) {
+            for (TopicPriority priority : TopicPriorityConfigurationService.getPriorities()) {
                 if (topicMatcher.matches(priority.getTopicFilter(), topic)) {
                     switch (priority.getPriorityClass()) {
                         case PRIORITY:

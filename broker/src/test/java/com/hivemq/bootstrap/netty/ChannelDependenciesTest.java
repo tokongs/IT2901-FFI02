@@ -19,7 +19,6 @@ import com.hivemq.codec.decoder.MqttConnectDecoder;
 import com.hivemq.codec.decoder.MqttDecoders;
 import com.hivemq.codec.encoder.EncoderFactory;
 import com.hivemq.configuration.service.FullConfigurationService;
-import com.hivemq.configuration.service.PriorityConfigurationService;
 import com.hivemq.configuration.service.RestrictionsConfigurationService;
 import com.hivemq.extensions.handler.*;
 import com.hivemq.logging.EventLog;

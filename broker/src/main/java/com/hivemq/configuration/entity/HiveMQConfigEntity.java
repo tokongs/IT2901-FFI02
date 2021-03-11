@@ -37,7 +37,7 @@ public class HiveMQConfigEntity {
 
     @XmlElementWrapper(name = "priorities")
     @XmlElementRef(required = false)
-    private @NotNull List<PriorityEntity> priorities = new ArrayList<>();
+    private @NotNull List<TopicPriorityEntity> priorities = new ArrayList<>();
 
     @XmlElementRef(required = false)
     private @NotNull MqttConfigEntity mqtt = new MqttConfigEntity();
@@ -59,7 +59,7 @@ public class HiveMQConfigEntity {
         return listeners;
     }
 
-    public @NotNull List<PriorityEntity> getTopicPriorityConfig() {
+    public @NotNull List<TopicPriorityEntity> getTopicPriorityConfig() {
         return priorities;
     }
 

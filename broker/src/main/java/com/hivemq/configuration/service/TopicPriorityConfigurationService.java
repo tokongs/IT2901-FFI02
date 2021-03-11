@@ -28,7 +28,7 @@ import java.util.List;
  * @author Christoffer Stensrud
  *
  */
-public interface PriorityConfigurationService {
+public interface TopicPriorityConfigurationService {
 
     /**
      * Adds a new Priority at runtime
