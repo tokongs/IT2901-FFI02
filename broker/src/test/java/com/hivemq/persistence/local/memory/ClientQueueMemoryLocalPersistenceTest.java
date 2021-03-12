@@ -45,7 +45,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy.DISCARD;
-import static com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy.DISCARD_OLDEST;
+import static com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy.DISCARD_LOWEST_PRIORITY;
 import static com.hivemq.persistence.clientqueue.ClientQueuePersistenceImpl.SHARED_IN_FLIGHT_MARKER;
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.anyString;
@@ -323,7 +323,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
     @Test
     public void test_add_discard() {
-        for (int i = 6; i >= 1; i--) {
+        for (int i = 1; i <= 6; i++) {
             persistence.add("client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic/" + (i)), 3L, DISCARD, false, 0);
         }
         assertEquals(3, persistence.size("client", false, 0));
@@ -341,17 +341,17 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
     @Test
     public void test_add_discard_lowest_priority() {
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 6; i >= 1; i--) {
             persistence.add(
-                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic/" + i), 3L, DISCARD_OLDEST, false, 0);
+                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic/" + i), 3L, DISCARD_LOWEST_PRIORITY, false, 0);
         }
         assertEquals(3, persistence.size("client", false, 0));
         final ImmutableList<PUBLISH> publishes =
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
         assertEquals(3, publishes.size());
-        assertEquals("topic/4", publishes.get(0).getTopic());
-        assertEquals("topic/5", publishes.get(1).getTopic());
-        assertEquals("topic/6", publishes.get(2).getTopic());
+        assertEquals("topic/1", publishes.get(0).getTopic());
+        assertEquals("topic/2", publishes.get(1).getTopic());
+        assertEquals("topic/3", publishes.get(2).getTopic());
         verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
     }
 
@@ -914,7 +914,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals("topic/1", all.get(1).getTopic());
     }
 
-    @Test
+    /*@Test
     public void test_batched_add_discard_oldest() {
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
@@ -945,6 +945,48 @@ public class ClientQueueMemoryLocalPersistenceTest {
             publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, "topic/" + i));
         }
         persistence.add("client", false, publishes.build(), 3, DISCARD_OLDEST, false, 0);
+
+        assertEquals(3, persistence.size("client", false, 0));
+
+        final ImmutableList<PUBLISH> all =
+                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 10000L, 0);
+        assertEquals(3, all.size());
+        assertEquals("topic/3", all.get(0).getTopic());
+        assertEquals("topic/4", all.get(1).getTopic());
+        assertEquals("topic/5", all.get(2).getTopic());
+    }*/
+
+    @Test
+    public void test_batched_add_discard_oldest() {
+        final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
+
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topic/1"), 3, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topic/1"), 3, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topic/1"), 3, DISCARD_LOWEST_PRIORITY, false, 0);
+
+        for (int i = 0; i < 3; i++) {
+            publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, "topic/" + i));
+        }
+        persistence.add("client", false, publishes.build(), 3, DISCARD_LOWEST_PRIORITY, false, 0);
+
+        assertEquals(3, persistence.size("client", false, 0));
+
+        final ImmutableList<PUBLISH> all =
+                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 10000L, 0);
+        assertEquals(3, all.size());
+        assertEquals("topic/0", all.get(0).getTopic());
+        assertEquals("topic/1", all.get(1).getTopic());
+        assertEquals("topic/2", all.get(2).getTopic());
+    }
+
+    @Test
+    public void test_batched_add_larger_than_queue_discard_oldest() {
+        final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
+
+        for (int i = 0; i < 6; i++) {
+            publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, "topic/" + i));
+        }
+        persistence.add("client", false, publishes.build(), 3, DISCARD_LOWEST_PRIORITY, false, 0);
 
         assertEquals(3, persistence.size("client", false, 0));
 
@@ -1022,11 +1064,30 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals("topic/1", all.get(1).getTopic());
     }
 
-    @Test
+    /*@Test
     public void add_and_poll_mixture_retained() {
         for (int i = 0; i < 12; i++) {
             persistence.add(
                     "client", false, createPublish(1, QoS.EXACTLY_ONCE, "topic/" + i), 5, DISCARD_OLDEST, i % 2 != 0, 0);
+        }
+        final ImmutableList<PUBLISH> all = persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), 10000L, 0);
+        assertEquals(10, persistence.size("client", false, 0));
+        assertEquals(10, all.size());
+
+        final Set<PUBLISH> notExpectedMessages = all.stream()
+                .filter(publish -> publish.getTopic().equals("10") || publish.getTopic().equals("11"))
+                .collect(Collectors.toSet());
+        assertTrue(notExpectedMessages.isEmpty());
+
+        final Gauge<Long> gauge = metricRegistry.getGauges().get(HiveMQMetrics.QUEUED_MESSAGES_MEMORY_PERSISTENCE_TOTAL_SIZE.name());
+        assertTrue(gauge.getValue() > 0);
+    }*/
+
+    @Test
+    public void add_and_poll_mixture_retained() {
+        for (int i = 0; i < 12; i++) {
+            persistence.add(
+                    "client", false, createPublish(1, QoS.EXACTLY_ONCE, "topic/" + i), 5, DISCARD_LOWEST_PRIORITY, i % 2 != 0, 0);
         }
         final ImmutableList<PUBLISH> all = persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), 10000L, 0);
         assertEquals(10, persistence.size("client", false, 0));

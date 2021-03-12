@@ -185,6 +185,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
             if (publish.getQoS() == QoS.AT_MOST_ONCE) {
                 addQos0Publish(queueId, shared, messages, publishWithRetained);
             } else {
+
                 PublishWithRetainedComparator pwrC = new PublishWithRetainedComparator();
 
                 final int qos1And2QueueSize = messages.qos1Or2Messages.size() - messages.retainedQos1Or2Messages;
@@ -194,7 +195,9 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
                         continue;
                     } else {
 
-                        int result = pwrC.compare((PublishWithRetained) publish, Objects.requireNonNull(getLowestPriorityMessage(messages, false)));
+                        PublishWithRetained pwr = new PublishWithRetained(publish, false);
+
+                        int result = pwrC.compare(pwr, Objects.requireNonNull(getLowestPriorityMessage(messages, false)));
                         switch (result){
                             case 1: // publish is lower prioritized
                                 logAndDecrementPayloadReference(publish, shared, queueId);
@@ -216,7 +219,9 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
                         continue;
                     } else {
 
-                        int result = pwrC.compare((PublishWithRetained) publish, Objects.requireNonNull(getLowestPriorityMessage(messages, false)));
+                        PublishWithRetained pwr = new PublishWithRetained(publish, true);
+
+                        int result = pwrC.compare(pwr, Objects.requireNonNull(getLowestPriorityMessage(messages, false)));
                         switch (result){
                             case 1: // publish is lower prioritized
                                 logAndDecrementPayloadReference(publish, shared, queueId);
@@ -833,54 +838,34 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
             final @NotNull Messages messages,
             final boolean retainedOnly) {
 
-        if (messages.qos0Messages.isEmpty()){
-            return null;
-        }
+        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
 
-        PublishWithRetained[] qos0messagesArray = (PublishWithRetained[]) messages.qos0Messages.toArray();
-        MessageWithID[] qos1or2messagesArray = (MessageWithID[]) Arrays.stream(messages.qos1Or2Messages.toArray())
-                .filter(m -> m instanceof MessageWithID)
-                .toArray(); // array of only QoS1 messages.
+        PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(reversedPWRComparator);
+        messagePQ.addAll(messages.qos0Messages);
 
-        Collections.reverse(Arrays.asList(qos0messagesArray));
-        Collections.reverse(Arrays.asList(qos1or2messagesArray));
-
-        PublishWithRetained lowestPrioritizedQoS0 = qos0messagesArray[0];
-        Optional<PublishWithRetained> lowestPrioritizedQoS1Opt = Arrays.stream(qos1or2messagesArray)
+        messagePQ.addAll(messages.qos1Or2Messages.stream()
+                .filter(m -> m instanceof PublishWithRetained)
                 .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
                 .map(m -> (PublishWithRetained) m)
                 .filter(m -> !((retainedOnly && !m.retained) || (!retainedOnly && m.retained)))
-                .findFirst();
+                .collect(Collectors.toList()));
 
-        if(lowestPrioritizedQoS1Opt.isPresent()){ //if QoS1 is present compare them
-            PublishWithRetainedComparator pwrC = new PublishWithRetainedComparator();
-            PublishWithRetained lowestPrioritizedQoS1 = lowestPrioritizedQoS1Opt.get();
+        PublishWithRetained lowestPrioritizedMessage = messagePQ.poll();
 
-            int result = pwrC.compare(lowestPrioritizedQoS0, lowestPrioritizedQoS1);
-            switch(result){
-                case 1: //  qos0 is lower prioritized
-                    return lowestPrioritizedQoS0;
-                case -1: // qos0 is higher prioritized
-                    return lowestPrioritizedQoS1;
-                case 0: // qos0 is equally prioritized
-                    PublishWithRetainedTimeComparator timeComparator = new PublishWithRetainedTimeComparator();
-
-                    int timeResult = timeComparator.compare(lowestPrioritizedQoS0, lowestPrioritizedQoS1);
-
-                    switch (timeResult){
-                        case -1:
-                            return lowestPrioritizedQoS0;
-                        case 1:
-                        case 0:
-                            return lowestPrioritizedQoS1;
-                    }
-                    break;
-            }
-        }else { //if QoS1 is not present, return QoS0
-            return lowestPrioritizedQoS0;
+        if(lowestPrioritizedMessage == null){
+            return null;
+        } else if (messagePQ.peek() == null) {
+            return lowestPrioritizedMessage;
         }
 
-        return null;
+        PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(new PublishWithRetainedTimeComparator());
+        timeMessages.add(lowestPrioritizedMessage);
+
+        while (reversedPWRComparator.compare(messagePQ.peek(), lowestPrioritizedMessage) == 0) {
+            timeMessages.add(messagePQ.poll());
+        }
+
+        return timeMessages.peek();
     }
 
 
@@ -1053,8 +1038,20 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
     
     }
 
+    private static class ReversedPublishWithRetainedComparator implements Comparator<PublishWithRetained> {
+
+        @Override
+        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
+            return Integer.compare(getTopicPriority(p2.getTopic()), getTopicPriority(p1.getTopic()));
+        }
+
+    }
+
     private static int getTopicPriority(String topic) {
-        return Integer.parseInt(topic.substring(topic.length() - 1));
+        if(!topic.contains("/")) {
+            throw new IllegalArgumentException("A topic must be on the form 'topicname/priority, where priority is an int'. Topic failed:" + topic);
+        }
+        return Integer.parseInt(topic.substring(topic.indexOf("/")+1));
     }
 
     private static class PublishWithRetainedTimeComparator implements Comparator<PublishWithRetained> {

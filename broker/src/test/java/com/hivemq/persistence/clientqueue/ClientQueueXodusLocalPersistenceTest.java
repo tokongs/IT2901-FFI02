@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy.DISCARD;
-import static com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy.DISCARD_OLDEST;
+import static com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy.DISCARD_LOWEST_PRIORITY;
 import static com.hivemq.persistence.clientqueue.ClientQueuePersistenceImpl.Key;
 import static com.hivemq.persistence.clientqueue.ClientQueuePersistenceImpl.SHARED_IN_FLIGHT_MARKER;
 import static org.junit.Assert.*;
@@ -347,7 +347,7 @@ public class ClientQueueXodusLocalPersistenceTest {
     public void test_add_discard_oldest() {
         for (int i = 1; i <= 6; i++) {
             persistence.add(
-                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic" + i), 3L, DISCARD_OLDEST, false, 0);
+                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic" + i), 3L, DISCARD_LOWEST_PRIORITY, false, 0);
         }
         assertEquals(3, persistence.size("client", false, 0));
         final ImmutableList<PUBLISH> publishes =
@@ -798,14 +798,14 @@ public class ClientQueueXodusLocalPersistenceTest {
     public void test_batched_add_discard_oldest() {
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topicA"), 3, DISCARD_OLDEST, false, 0);
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topicB"), 3, DISCARD_OLDEST, false, 0);
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topicC"), 3, DISCARD_OLDEST, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topicA"), 3, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topicB"), 3, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topicC"), 3, DISCARD_LOWEST_PRIORITY, false, 0);
 
         for (int i = 0; i < 3; i++) {
             publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, "topic" + i));
         }
-        persistence.add("client", false, publishes.build(), 3, DISCARD_OLDEST, false, 0);
+        persistence.add("client", false, publishes.build(), 3, DISCARD_LOWEST_PRIORITY, false, 0);
 
         assertEquals(3, persistence.size("client", false, 0));
 
@@ -817,7 +817,7 @@ public class ClientQueueXodusLocalPersistenceTest {
         assertEquals("topic2", all.get(2).getTopic());
     }
 
-    @Test
+    /*@Test
     public void test_batched_add_larger_than_queue_discard_oldest() {
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
@@ -825,6 +825,26 @@ public class ClientQueueXodusLocalPersistenceTest {
             publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, "topic" + i));
         }
         persistence.add("client", false, publishes.build(), 3, DISCARD_OLDEST, false, 0);
+
+        assertEquals(3, persistence.size("client", false, 0));
+
+        final ImmutableList<PUBLISH> all =
+                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 10000L, 0);
+        assertEquals(3, all.size());
+        assertEquals("topic3", all.get(0).getTopic());
+        assertEquals("topic4", all.get(1).getTopic());
+        assertEquals("topic5", all.get(2).getTopic());
+    }*/
+
+
+    @Test
+    public void test_batched_add_larger_than_queue_discard_oldest() {
+        final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
+
+        for (int i = 0; i < 6; i++) {
+            publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, "topic" + i));
+        }
+        persistence.add("client", false, publishes.build(), 3, DISCARD_LOWEST_PRIORITY, false, 0);
 
         assertEquals(3, persistence.size("client", false, 0));
 
@@ -888,7 +908,7 @@ public class ClientQueueXodusLocalPersistenceTest {
         assertEquals("topic1", all.get(1).getTopic());
     }
 
-    @Test
+    /*@Test
     public void add_and_poll_mixture_retained() {
         for (int i = 0; i < 12; i++) {
             if (i % 2 == 0) {
@@ -897,6 +917,28 @@ public class ClientQueueXodusLocalPersistenceTest {
             } else {
                 persistence.add(
                         "client", false, createPublish(1, QoS.EXACTLY_ONCE, "topic" + i), 5, DISCARD_OLDEST, true, 0);
+            }
+        }
+        final ImmutableList<PUBLISH> all = persistence.readNew(
+                "client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), 10000L, 0);
+        assertEquals(10, persistence.size("client", false, 0));
+        assertEquals(10, all.size());
+
+        final Set<PUBLISH> notExpectedMessages = all.stream()
+                .filter(publish -> publish.getTopic().equals("10") || publish.getTopic().equals("11"))
+                .collect(Collectors.toSet());
+        assertTrue(notExpectedMessages.isEmpty());
+    }*/
+
+    @Test
+    public void add_and_poll_mixture_retained() {
+        for (int i = 0; i < 12; i++) {
+            if (i % 2 == 0) {
+                persistence.add(
+                        "client", false, createPublish(1, QoS.EXACTLY_ONCE, "topic" + i), 5, DISCARD_LOWEST_PRIORITY, false, 0);
+            } else {
+                persistence.add(
+                        "client", false, createPublish(1, QoS.EXACTLY_ONCE, "topic" + i), 5, DISCARD_LOWEST_PRIORITY, true, 0);
             }
         }
         final ImmutableList<PUBLISH> all = persistence.readNew(
@@ -1123,7 +1165,7 @@ public class ClientQueueXodusLocalPersistenceTest {
 
     }
 
-    @Test
+    /*@Test
     public void test_shared_sub_without_packetId_cache_works() {
         String sharedSub = "topic" + "\u0000"+ "0";
 
@@ -1138,6 +1180,47 @@ public class ClientQueueXodusLocalPersistenceTest {
         for (int i = 2; i < 21; i++) {
             persistence.add(sharedSub, true, createPublish(i, QoS.AT_LEAST_ONCE, "topic", 1),
                     20, DISCARD_OLDEST,  false,  0);
+        }
+        // read one
+        persistence.readNew(sharedSub, true, ImmutableIntArray.of(1), 256000, 0);
+        // cache must be increased by one
+        long currentIndex = persistence.sharedSubLastPacketWithoutIdCache.getIfPresent(sharedSub);
+        assertEquals(startIndex + 1, currentIndex);
+        // read one
+        persistence.readNew(sharedSub, true, ImmutableIntArray.of(1), 256000, 0);
+        // cache must be increased by two
+        currentIndex = persistence.sharedSubLastPacketWithoutIdCache.getIfPresent(sharedSub);
+        assertEquals(startIndex + 2, currentIndex);
+        // read 3
+        publishes = persistence.readNew(sharedSub, true, ImmutableIntArray.of(1, 1, 1), 256000 , 0);
+        assertEquals(3, publishes.size());
+        // cache must be increased by at least 3 and 5 at max (5 would be perfect, but we cant update it while iterating,
+        // because we dont know whether the callback set a packet-id or noz
+        currentIndex = persistence.sharedSubLastPacketWithoutIdCache.getIfPresent(sharedSub);
+        assertTrue(startIndex + 3 <= currentIndex && startIndex + 5 >= currentIndex);
+        //remove inflight marking for the first message
+        persistence.removeInFlightMarker(sharedSub, "hivemqId_pub_1", 0);
+        // cache must be at start
+        currentIndex = persistence.sharedSubLastPacketWithoutIdCache.getIfPresent(sharedSub);
+        assertEquals(startIndex, currentIndex);
+    }*/
+
+
+    @Test
+    public void test_shared_sub_without_packetId_cache() { //works
+        String sharedSub = "topic" + "\u0000"+ "0";
+
+
+        persistence.add(sharedSub, true, createPublish(1, QoS.AT_LEAST_ONCE, "topic", 1), 21, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.readNew(sharedSub, true, ImmutableIntArray.of(1), 256000,  0);
+        ImmutableList<PUBLISH> publishes;
+        long startIndex = persistence.sharedSubLastPacketWithoutIdCache.getIfPresent(sharedSub);
+        System.out.println(startIndex);
+
+        // add many new messages
+        for (int i = 2; i < 21; i++) {
+            persistence.add(sharedSub, true, createPublish(i, QoS.AT_LEAST_ONCE, "topic", 1),
+                    20, DISCARD_LOWEST_PRIORITY,  false,  0);
         }
         // read one
         persistence.readNew(sharedSub, true, ImmutableIntArray.of(1), 256000, 0);
