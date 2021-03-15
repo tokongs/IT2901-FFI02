@@ -32,6 +32,8 @@ import com.hivemq.persistence.local.memory.ClientQueueMemoryLocalPersistence.Pub
 import com.hivemq.persistence.local.xodus.bucket.BucketUtils;
 import com.hivemq.persistence.payload.PublishPayloadPersistence;
 import com.hivemq.util.ObjectMemoryEstimation;
+import com.hivemq.util.Topics;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -348,10 +350,12 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals(3, persistence.size("client", false, 0));
         final ImmutableList<PUBLISH> publishes =
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
+
+        final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList())
         assertEquals(3, publishes.size());
-        assertEquals("topic/1", publishes.get(0).getTopic());
-        assertEquals("topic/2", publishes.get(1).getTopic());
-        assertEquals("topic/3", publishes.get(2).getTopic());
+        assertTrue(Topics.contains("topic/1"));
+        assertTrue(Topics.contains("topic/2"));
+        assertTrue(Topics.contains("topic/3"));
         verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
     }
 
@@ -957,7 +961,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
     }*/
 
     @Test
-    public void test_batched_add_discard_oldest() {
+    public void test_batched_add_discard_lowest_priority() {
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
         persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topic/1"), 3, DISCARD_LOWEST_PRIORITY, false, 0);
@@ -976,11 +980,11 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals(3, all.size());
         assertEquals("topic/0", all.get(0).getTopic());
         assertEquals("topic/1", all.get(1).getTopic());
-        assertEquals("topic/2", all.get(2).getTopic());
+        assertEquals("topic/1", all.get(2).getTopic());
     }
 
     @Test
-    public void test_batched_add_larger_than_queue_discard_oldest() {
+    public void test_batched_add_larger_than_queue_discard_lowest_priority() {
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
         for (int i = 0; i < 6; i++) {
@@ -993,9 +997,9 @@ public class ClientQueueMemoryLocalPersistenceTest {
         final ImmutableList<PUBLISH> all =
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 10000L, 0);
         assertEquals(3, all.size());
-        assertEquals("topic/3", all.get(0).getTopic());
-        assertEquals("topic/4", all.get(1).getTopic());
-        assertEquals("topic/5", all.get(2).getTopic());
+        assertEquals("topic/0", all.get(0).getTopic());
+        assertEquals("topic/1", all.get(1).getTopic());
+        assertEquals("topic/2", all.get(2).getTopic());
     }
 
     @Test
