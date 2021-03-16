@@ -351,7 +351,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         final ImmutableList<PUBLISH> publishes =
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
 
-        final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList())
+        final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList());
         assertEquals(3, publishes.size());
         assertTrue(Topics.contains("topic/1"));
         assertTrue(Topics.contains("topic/2"));

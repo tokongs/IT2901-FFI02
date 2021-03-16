@@ -861,7 +861,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(new PublishWithRetainedTimeComparator());
         timeMessages.add(lowestPrioritizedMessage);
 
-        while (reversedPWRComparator.compare(messagePQ.peek(), lowestPrioritizedMessage) == 0) {
+        while (!messagePQ.isEmpty() && (reversedPWRComparator.compare(messagePQ.peek(), lowestPrioritizedMessage) == 0)) {
             timeMessages.add(messagePQ.poll());
         }
 
