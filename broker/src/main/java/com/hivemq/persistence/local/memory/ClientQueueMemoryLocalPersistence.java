@@ -317,6 +317,8 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
         final Iterator<MessageWithID> iterator = messages.qos1Or2Messages.iterator();
+
+
         while (iterator.hasNext()) {
             final MessageWithID messageWithID = iterator.next();
             if (!(messageWithID instanceof PublishWithRetained)) {

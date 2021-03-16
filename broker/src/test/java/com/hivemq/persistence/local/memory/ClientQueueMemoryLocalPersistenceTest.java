@@ -1278,6 +1278,46 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
     }
 
+    /*
+    * Needed tests:
+    *
+    *
+    * test_read_new_highest_priority
+    *
+    * test_read_
+    *
+    *
+    *
+    *
+    *
+    *
+    * */
+
+    @Test
+    public void test_read_new_highest_priority() {
+        //test_add_discard_lowest
+        for (int i = 6; i >= 1; i--) {
+            persistence.add(
+                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic/" + i), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        }
+        final ImmutableList<PUBLISH> publishes =
+                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
+
+        //final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList());
+        assertEquals(6, publishes.size());
+
+        assertEquals("topic/1", publishes.get(0).getTopic());
+        assertEquals("topic/3", publishes.get(1).getTopic());
+        assertEquals("topic/2", publishes.get(2).getTopic());
+        assertEquals("topic/6", publishes.get(3).getTopic());
+        assertEquals("topic/4", publishes.get(4).getTopic());
+        assertEquals("topic/5", publishes.get(5).getTopic());
+
+    }
+
+
+
+
     private ImmutableIntArray createPacketIds(final int start, final int size) {
         final ImmutableIntArray.Builder builder = ImmutableIntArray.builder();
         for (int i = start; i < (size + start); i++) {
