@@ -1049,7 +1049,7 @@ public class ClientQueueMemoryLocalPersistence implements ClientQueueLocalPersis
 
     }
 
-    private static int getTopicPriority(String topic) {
+    static int getTopicPriority(String topic) {
         if(!topic.contains("/")) {
             throw new IllegalArgumentException("A topic must be on the form 'topicname/priority, where priority is an int'. Topic failed:" + topic);
         }

@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.ImmutableIntArray;
 import com.hivemq.configuration.service.InternalConfigurations;
+import com.hivemq.extension.sdk.api.annotations.Immutable;
 import com.hivemq.metrics.HiveMQMetrics;
 import com.hivemq.mqtt.message.MessageWithID;
 import com.hivemq.mqtt.message.QoS;
@@ -1278,43 +1279,73 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
     }
 
-    /*
-    * Needed tests:
-    *
-    *
-    * test_read_new_highest_priority
-    *
-    * test_read_
-    *
-    *
-    *
-    *
-    *
-    *
-    * */
 
     @Test
     public void test_read_new_highest_priority() {
-        //test_add_discard_lowest
-        for (int i = 6; i >= 1; i--) {
-            persistence.add(
-                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic/" + i), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        }
+        persistence.add("client", false, createPublish(6, QoS.AT_LEAST_ONCE, "topic/" + 6), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(5, QoS.AT_LEAST_ONCE, "topic/" + 5), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(4, QoS.AT_LEAST_ONCE, "topic/" + 4), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(3, QoS.AT_LEAST_ONCE, "topic/" + 3), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(2, QoS.AT_LEAST_ONCE, "topic/" + 2), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topic/" + 1), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+
+
         final ImmutableList<PUBLISH> publishes =
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
 
-        //final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList());
+        final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList());
         assertEquals(6, publishes.size());
 
-        assertEquals("topic/1", publishes.get(0).getTopic());
-        assertEquals("topic/3", publishes.get(1).getTopic());
-        assertEquals("topic/2", publishes.get(2).getTopic());
-        assertEquals("topic/6", publishes.get(3).getTopic());
-        assertEquals("topic/4", publishes.get(4).getTopic());
-        assertEquals("topic/5", publishes.get(5).getTopic());
+        assertEquals("topic/1", Topics.get(0));
 
     }
 
+    @Test
+    public void test_read_new_highest_priority_only_qos0() {
+        persistence.add("client", false, createPublish(4, QoS.AT_MOST_ONCE, "topic/" + 4), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(3, QoS.AT_MOST_ONCE, "topic/" + 3), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(2, QoS.AT_MOST_ONCE, "topic/" + 2), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_MOST_ONCE, "topic/" + 1), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+
+
+        final ImmutableList<PUBLISH> publishes =
+                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4), byteLimit, 0);
+
+        final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList());
+        assertEquals(4, publishes.size());
+
+        assertEquals("topic/1", Topics.get(0));
+
+    }
+
+    /*
+    * test_publish_with_retained_time_comparator
+    * test_publish_with_retained_comparator
+    * test_reversed_publish_with_retained_comparator
+    * test_get_topic_priority
+    * */
+
+    @Test
+    public void test_get_topic_priority() {
+        persistence.add("client", false, createPublish(1, QoS.AT_MOST_ONCE, "topic/" + 1), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(2, QoS.AT_MOST_ONCE, "topic/" + 1234567890), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(3, QoS.AT_MOST_ONCE, "topic/"), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+
+        //persistence.add("client", false, createPublish(4, QoS.AT_MOST_ONCE, "topic"), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+
+        final ImmutableList<PUBLISH> publishes = persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3), byteLimit, 0);
+        int priority1 = ClientQueueMemoryLocalPersistence.getTopicPriority(publishes.get(0).getTopic());
+        int priority2 = ClientQueueMemoryLocalPersistence.getTopicPriority(publishes.get(1).getTopic());
+        int priority3 = ClientQueueMemoryLocalPersistence.getTopicPriority(publishes.get(2).getTopic());
+        //int priority4 = ClientQueueMemoryLocalPersistence.getTopicPriority(publishes.get(3).getTopic());
+
+        //assertEquals(4, publishes.size());
+
+        assertEquals(1, priority1); //check for 1 digit
+        assertEquals(1234567890, priority2); //check for 10 digits
+        assertEquals("", priority3); //check for empty priority
+        //assertEquals("", priority4); //check for empty priority
+    }
 
 
 
