@@ -32,6 +32,8 @@ import com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesS
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.annotations.Nullable;
 import com.hivemq.extension.sdk.api.services.publish.Publish;
+import com.hivemq.extensions.priority.PriorityClass;
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.metrics.HiveMQMetrics;
 import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.MessageWithID;
@@ -39,6 +41,7 @@ import com.hivemq.mqtt.message.QoS;
 import com.hivemq.mqtt.message.dropping.MessageDroppedService;
 import com.hivemq.mqtt.message.publish.PUBLISH;
 import com.hivemq.mqtt.message.pubrel.PUBREL;
+import com.hivemq.mqtt.message.subscribe.Topic;
 import com.hivemq.persistence.clientqueue.ClientQueueLocalPersistence;
 import com.hivemq.persistence.payload.PublishPayloadPersistence;
 import com.hivemq.util.ObjectMemoryEstimation;
@@ -1279,6 +1282,7 @@ public class ClientQueueMemoryLocalPersistence
       this.retained = retained;
     }
 
+<<<<<<< HEAD
     private int getEstimatedSize() {
       return (
         getEstimatedSizeInMemory() + // publish
@@ -1293,6 +1297,36 @@ public class ClientQueueMemoryLocalPersistence
    */
   private static class MessageWithIDComparator
     implements Comparator<MessageWithID> {
+=======
+    /**
+     * Qos1 or Qos2 Message Comparator
+     */
+    private static class MessageWithIDComparator implements Comparator<MessageWithID> {
+
+        @Override
+        public int compare(MessageWithID m1, MessageWithID m2) {
+            int m1Topic = 5;
+            int m2Topic = 5;
+            if(m1 instanceof PublishWithRetained) {
+                final PublishWithRetained publish = (PublishWithRetained) m1;
+                m1Topic = getPriority(publish.getTopicPriority());
+            } else if(m1 instanceof PubrelWithRetained) {
+                System.out.print("this is pubrel" + m1);
+                m1Topic = 5;
+                // final PubrelWithRetained pubrel = (PubrelWithRetained) m1;
+                // m1Topic = getTopicPriority(pubrel.getTopic())
+            }
+
+            if(m2 instanceof PublishWithRetained) {
+                final PublishWithRetained publish = (PublishWithRetained) m2;
+                m2Topic = getPriority(publish.getTopicPriority());
+            } else if(m2 instanceof PubrelWithRetained) {
+                System.out.print("this is pubrel" + m2);
+                m2Topic = 5;
+                // final PubrelWithRetained pubrel = (PubrelWithRetained) m2;
+                // m2Topic = getTopicPriority(pubrel.getTopic())
+            }
+>>>>>>> 381f8566902599e0b8517da59850b8675c240f18
 
     @Override
     public int compare(MessageWithID m1, MessageWithID m2) {
@@ -1328,17 +1362,76 @@ public class ClientQueueMemoryLocalPersistence
   private static class PublishWithRetainedComparator
     implements Comparator<PublishWithRetained> {
 
+<<<<<<< HEAD
     @Override
     public int compare(PublishWithRetained p1, PublishWithRetained p2) {
       return Integer.compare(
         getTopicPriority(p1.getTopic()),
         getTopicPriority(p2.getTopic())
       );
+=======
+        /**
+         * Compares two PublishWithRetained's to decide which has lowest priority.
+         *
+         * @param p1    as the first PublishWithRetained
+         * @param p2    as the second PublishWithRetained
+         * @return  -1 if p1 has lowest priority,
+         *          0 if they are equal or
+         *          1 if p2 has lowest priority
+         */
+        @Override
+        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
+            TopicPriority p1TP = p1.getTopicPriority();
+            TopicPriority p2TP = p2.getTopicPriority();
+
+            if(p1TP.getPriorityClass().equals(p2TP.getPriorityClass())) { // same PriorityClass, compare the internal priority
+                return Integer.compare(getPriority(p1.getTopicPriority()), getPriority(p2.getTopicPriority()));
+            }
+            else { // different PriorityClass, compare them
+                int p1PcAsInt = getPriorityClassAsInt(p1.getTopicPriority());
+                int p2PcAsInt = getPriorityClassAsInt(p2.getTopicPriority());
+
+                return Integer.compare(p1PcAsInt, p2PcAsInt);
+            }
+
+        }
+    
+>>>>>>> 381f8566902599e0b8517da59850b8675c240f18
     }
   }
 
+<<<<<<< HEAD
   private static class ReversedPublishWithRetainedComparator
     implements Comparator<PublishWithRetained> {
+=======
+    static class ReversedPublishWithRetainedComparator implements Comparator<PublishWithRetained> {
+
+        /**
+         * Compares two PublishWithRetained's to decide which has lowest priority.
+         *
+         * @param p1    as the first PublishWithRetained
+         * @param p2    as the second PublishWithRetained
+         * @return  -1 if p2 has lowest priority,
+         *          0 if they are equal or
+         *          1 if p1 has lowest priority
+         */
+        @Override
+        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
+            TopicPriority p1TP = p1.getTopicPriority();
+            TopicPriority p2TP = p2.getTopicPriority();
+
+            if(p1TP.getPriorityClass().equals(p2TP.getPriorityClass())) { // same PriorityClass, compare the internal priority
+                return Integer.compare(getPriority(p2.getTopicPriority()), getPriority(p1.getTopicPriority()));
+            }
+            else { // different PriorityClass, compare them
+                int p1PcAsInt = getPriorityClassAsInt(p1.getTopicPriority());
+                int p2PcAsInt = getPriorityClassAsInt(p2.getTopicPriority());
+
+                return Integer.compare(p2PcAsInt, p1PcAsInt);
+            }
+
+        }
+>>>>>>> 381f8566902599e0b8517da59850b8675c240f18
 
     @Override
     public int compare(PublishWithRetained p1, PublishWithRetained p2) {
@@ -1347,6 +1440,7 @@ public class ClientQueueMemoryLocalPersistence
         getTopicPriority(p1.getTopic())
       );
     }
+<<<<<<< HEAD
   }
 
   private static int getTopicPriority(String topic) {
@@ -1355,6 +1449,25 @@ public class ClientQueueMemoryLocalPersistence
         "A topic must be on the form 'topicname/priority, where priority is an int'. Topic failed:" +
         topic
       );
+=======
+
+    static int getPriorityClassAsInt(TopicPriority topicPriority){
+
+        switch(topicPriority.getPriorityClass()){
+            case FLASH:
+                return 0;
+            case IMMEDIATE:
+                return 1;
+            case PRIORITY:
+                return 2;
+            case ROUTINE:
+                return 3;
+        }
+        return 0;
+    }
+    static int getPriority(TopicPriority topicPriority) {
+        return topicPriority.getPriority();
+>>>>>>> 381f8566902599e0b8517da59850b8675c240f18
     }
     return Integer.parseInt(topic.substring(topic.indexOf("/") + 1));
   }

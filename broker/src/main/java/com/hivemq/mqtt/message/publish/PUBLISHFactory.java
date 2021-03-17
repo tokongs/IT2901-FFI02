@@ -21,6 +21,7 @@ import com.hivemq.codec.encoder.mqtt5.Mqtt5PayloadFormatIndicator;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.annotations.Nullable;
 import com.hivemq.extensions.packets.publish.PublishPacketImpl;
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.mqtt.message.QoS;
 import com.hivemq.mqtt.message.mqtt5.Mqtt5UserProperties;
 import com.hivemq.persistence.payload.PublishPayloadPersistence;
@@ -47,6 +48,7 @@ public class PUBLISHFactory {
         private long timestamp = System.currentTimeMillis();
         private @Nullable byte[] payload;
         private @Nullable String topic;
+        private @Nullable TopicPriority topicPriority;
         private boolean duplicateDelivery;
         private boolean retain;
         private @Nullable QoS qoS;
@@ -66,7 +68,8 @@ public class PUBLISHFactory {
         @NotNull
         public Mqtt5Builder fromPublish(final @NotNull PUBLISH publish) {
             this.hivemqId = publish.getHivemqId();
-            this.topic = publish.getTopic();
+            this.topic = publish.getTopicPriority().getTopicFilter();
+            this.topicPriority = publish.getTopicPriority();
             this.qoS = publish.getQoS();
             this.payload = publish.getPayload();
             this.retain = publish.isRetain();
@@ -89,10 +92,11 @@ public class PUBLISHFactory {
         public PUBLISH build() {
 
             Preconditions.checkNotNull(hivemqId, "HivemqId may never be null");
-            Preconditions.checkNotNull(topic, "Topic may never be null");
+            Preconditions.checkNotNull(topicPriority, "TopicPriority may never be null");
+            //Preconditions.checkNotNull(topic, "Topic may never be null");
             Preconditions.checkNotNull(qoS, "Quality of service may never be null");
 
-            return new PUBLISH(hivemqId, topic, payload, qoS, retain, messageExpiryInterval,
+            return new PUBLISH(hivemqId, topic, topicPriority, payload, qoS, retain, messageExpiryInterval,
                     payloadFormatIndicator, contentType, responseTopic, correlationData,
                     userProperties, packetIdentifier, duplicateDelivery, isNewTopicAlias, subscriptionIdentifiers,
                     persistence, timestamp, publishId);
@@ -113,6 +117,12 @@ public class PUBLISHFactory {
         @NotNull
         public Mqtt5Builder withTopic(final @Nullable String topic) {
             this.topic = topic;
+            return this;
+        }
+
+        @NotNull
+        public Mqtt5Builder withTopicPriority(final @Nullable TopicPriority topicPriority) {
+            this.topicPriority = topicPriority;
             return this;
         }
 
@@ -211,6 +221,7 @@ public class PUBLISHFactory {
 
         private @Nullable String hivemqId;
         private @Nullable String topic;
+        private @Nullable TopicPriority topicPriority;
         private @Nullable PublishPayloadPersistence persistence;
 
         private @Nullable QoS qoS;
@@ -229,7 +240,8 @@ public class PUBLISHFactory {
         @NotNull
         public Mqtt3Builder fromPublish(final @NotNull PUBLISH publish) {
             this.hivemqId = publish.getHivemqId();
-            this.topic = publish.getTopic();
+            this.topic = publish.getTopicPriority().getTopicFilter();
+            this.topicPriority = publish.getTopicPriority();
             this.qoS = publish.getQoS();
             this.payload = publish.getPayload();
             this.retain = publish.isRetain();
@@ -245,10 +257,11 @@ public class PUBLISHFactory {
         public PUBLISH build() {
 
             Preconditions.checkNotNull(hivemqId, "HivemqId may never be null");
+            Preconditions.checkNotNull(topicPriority, "TopicPriority may never be null");
             Preconditions.checkNotNull(topic, "Topic may never be null");
             Preconditions.checkNotNull(qoS, "Quality of service may never be null");
 
-            return new PUBLISH(hivemqId, topic, payload, qoS, retain,
+            return new PUBLISH(hivemqId, topic, topicPriority, payload, qoS, retain,
                     messageExpiryInterval, persistence, packetIdentifier, duplicateDelivery, publishId, timestamp);
         }
 
@@ -267,6 +280,12 @@ public class PUBLISHFactory {
         @NotNull
         public Mqtt3Builder withTopic(final @Nullable String topic) {
             this.topic = topic;
+            return this;
+        }
+
+        @NotNull
+        public Mqtt3Builder withTopicPriority(final @Nullable TopicPriority topicPriority) {
+            this.topicPriority = topicPriority;
             return this;
         }
 

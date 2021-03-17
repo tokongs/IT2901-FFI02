@@ -164,7 +164,7 @@ public class MqttConnectHandler extends MqttTimeoutInboundHandler {
 
             channel.pipeline().remove(this);
 
-            ((MqttEncoder) channel.pipeline().get(MqttEncoder.NAME)).onConnected(connectionConfig);
+            ((MqttEncoder) channel.pipeline().get(MqttEncoder.NAME)).onConnected(connectionConfig, clientConfig);
 
             session.startOrResume(connAck, connectionConfig, channel.pipeline(), channel.eventLoop());
 

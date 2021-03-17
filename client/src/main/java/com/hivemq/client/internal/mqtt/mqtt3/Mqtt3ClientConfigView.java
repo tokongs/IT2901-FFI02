@@ -122,4 +122,5 @@ public class Mqtt3ClientConfigView implements Mqtt3ClientConfig {
     public @NotNull Optional<Mqtt3ClientConnectionConfig> getConnectionConfig() {
         return Optional.ofNullable(delegate.getRawConnectionConfig());
     }
+
 }
