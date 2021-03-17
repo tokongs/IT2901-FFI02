@@ -334,9 +334,9 @@ public class ClientQueueMemoryLocalPersistenceTest {
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
 
         assertEquals(3, publishes.size());
-        assertEquals(1, publishes.get(0).getPacketIdentifier());
+        assertEquals(3, publishes.get(0).getPacketIdentifier());
         assertEquals(2, publishes.get(1).getPacketIdentifier());
-        assertEquals(3, publishes.get(2).getPacketIdentifier());
+        assertEquals(1, publishes.get(2).getPacketIdentifier());
 
         verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
     }
@@ -1296,7 +1296,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
     @Test
     public void test_read_new_highest_priority() {
         //test_add_discard_lowest
-        for (int i = 6; i >= 1; i--) {
+        for (int i = 1; i <= 6; i++) {
             persistence.add(
                     "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic/" + i), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
         }
@@ -1307,11 +1307,11 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals(6, publishes.size());
 
         assertEquals("topic/1", publishes.get(0).getTopic());
-        assertEquals("topic/3", publishes.get(1).getTopic());
-        assertEquals("topic/2", publishes.get(2).getTopic());
-        assertEquals("topic/6", publishes.get(3).getTopic());
-        assertEquals("topic/4", publishes.get(4).getTopic());
-        assertEquals("topic/5", publishes.get(5).getTopic());
+        assertEquals("topic/2", publishes.get(1).getTopic());
+        assertEquals("topic/3", publishes.get(2).getTopic());
+        assertEquals("topic/4", publishes.get(3).getTopic());
+        assertEquals("topic/5", publishes.get(4).getTopic());
+        assertEquals("topic/6", publishes.get(5).getTopic());
 
     }
 
