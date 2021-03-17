@@ -8,4 +8,12 @@
     <persistence>
         <mode>in-memory</mode>
     </persistence>
+
+    <priorities>
+        <priority>
+            <filter>testtopic/#</filter>
+            <priority>100</priority>
+            <priority-class>FLASH</priority-class>
+        </priority>
+    </priorities>
 </hivemq>

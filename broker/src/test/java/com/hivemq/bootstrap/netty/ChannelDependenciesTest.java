@@ -36,6 +36,7 @@ import com.hivemq.mqtt.handler.ping.PingRequestHandler;
 import com.hivemq.mqtt.handler.publish.MessageExpiryHandler;
 import com.hivemq.mqtt.handler.subscribe.SubscribeHandler;
 import com.hivemq.mqtt.handler.unsubscribe.UnsubscribeHandler;
+import com.hivemq.mqtt.topic.TopicMatcher;
 import com.hivemq.security.ssl.SslParameterHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
@@ -139,6 +140,9 @@ public class ChannelDependenciesTest {
     @Mock
     private GlobalMQTTMessageCounter globalMQTTMessageCounter;
 
+    @Mock
+    private TopicMatcher topicMatcher;
+
     @Before
     public void setUp() throws Exception {
 
@@ -172,7 +176,8 @@ public class ChannelDependenciesTest {
                 () -> messageExpiryHandler,
                 mqttServerDisconnector,
                 interceptorHandler,
-                globalMQTTMessageCounter);
+                globalMQTTMessageCounter,
+                topicMatcher);
 
     }
 

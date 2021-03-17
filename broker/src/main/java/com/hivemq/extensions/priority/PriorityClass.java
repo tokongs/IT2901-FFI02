@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present HiveMQ and the HiveMQ Community
+ * Copyright 2019-present HiveMQ GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.hivemq.client.extensions;
+package com.hivemq.extensions.priority;
 
 public enum PriorityClass {
     ROUTINE, PRIORITY, IMMEDIATE, FLASH

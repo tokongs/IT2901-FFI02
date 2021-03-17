@@ -15,6 +15,7 @@
  */
 package com.hivemq.mqtt.message.publish;
 
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.QoS;
 
@@ -48,6 +49,11 @@ public interface Mqtt3PUBLISH extends Message {
      * @return the topic of the publish message
      */
     String getTopic();
+
+    /**
+     * @return the topicPriority of the publish message
+     */
+    TopicPriority getTopicPriority();
 
     /**
      * @return the duplicate delivery flag of the publish message

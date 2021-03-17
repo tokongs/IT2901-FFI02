@@ -38,6 +38,7 @@ import com.hivemq.mqtt.handler.ping.PingRequestHandler;
 import com.hivemq.mqtt.handler.publish.MessageExpiryHandler;
 import com.hivemq.mqtt.handler.subscribe.SubscribeHandler;
 import com.hivemq.mqtt.handler.unsubscribe.UnsubscribeHandler;
+import com.hivemq.mqtt.topic.TopicMatcher;
 import com.hivemq.security.ssl.SslParameterHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
@@ -110,7 +111,8 @@ public class ChannelDependencies {
             final @NotNull Provider<MessageExpiryHandler> publishMessageExpiryHandlerProvider,
             final @NotNull MqttServerDisconnector mqttServerDisconnector,
             final @NotNull InterceptorHandler interceptorHandler,
-            final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter) {
+            final @NotNull GlobalMQTTMessageCounter globalMQTTMessageCounter,
+            final @NotNull TopicMatcher topicMatcher) {
 
         this.noConnectIdleHandler = noConnectIdleHandler;
         this.connectHandlerProvider = connectHandlerProvider;
@@ -126,7 +128,8 @@ public class ChannelDependencies {
         this.pingRequestHandler = pingRequestHandler;
         this.restrictionsConfigurationService = restrictionsConfigurationService;
         this.mqttConnectDecoder = mqttConnectDecoder;
-        this.mqttMessageEncoder = new MQTTMessageEncoder(encoderFactory, globalMQTTMessageCounter);
+        this.mqttMessageEncoder = new MQTTMessageEncoder(encoderFactory, globalMQTTMessageCounter,
+                fullConfigurationService.topicConfiguration(), topicMatcher);
         this.eventLog = eventLog;
         this.sslParameterHandler = sslParameterHandler;
         this.mqttDecoders = mqttDecoders;

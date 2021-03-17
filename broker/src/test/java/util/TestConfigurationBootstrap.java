@@ -15,10 +15,7 @@
  */
 package util;
 
-import com.hivemq.configuration.service.ConfigurationService;
-import com.hivemq.configuration.service.FullConfigurationService;
-import com.hivemq.configuration.service.PersistenceConfigurationService;
-import com.hivemq.configuration.service.SecurityConfigurationService;
+import com.hivemq.configuration.service.*;
 import com.hivemq.configuration.service.impl.*;
 import com.hivemq.configuration.service.impl.listener.ListenerConfigurationServiceImpl;
 import com.hivemq.statistics.UsageStatisticsConfig;
@@ -37,6 +34,8 @@ public class TestConfigurationBootstrap {
     private final UsageStatisticsConfig usageStatisticsConfig;
     private final PersistenceConfigurationService persistenceConfigurationService;
 
+    private final TopicPriorityConfigurationServiceImpl topicConfigurationService;
+
     public TestConfigurationBootstrap() {
         listenerConfigurationService = new ListenerConfigurationServiceImpl();
         mqttConfigurationService = new MqttConfigurationServiceImpl();
@@ -45,13 +44,17 @@ public class TestConfigurationBootstrap {
         usageStatisticsConfig = new UsageStatisticsConfigImpl();
         persistenceConfigurationService = new PersistenceConfigurationServiceImpl();
 
+        topicConfigurationService = new TopicPriorityConfigurationServiceImpl();
+
         configurationService = new ConfigurationServiceImpl(
                 listenerConfigurationService,
                 mqttConfigurationService,
                 restrictionsConfigurationService,
                 securityConfigurationService,
                 usageStatisticsConfig,
-                persistenceConfigurationService);
+                persistenceConfigurationService,
+
+                topicConfigurationService);
     }
 
     public SecurityConfigurationService getSecurityConfigurationService() {
@@ -96,5 +99,9 @@ public class TestConfigurationBootstrap {
 
     public PersistenceConfigurationService getPersistenceConfigurationService() {
         return persistenceConfigurationService;
+    }
+
+    public TopicPriorityConfigurationServiceImpl getTopicConfigurationService() {
+        return topicConfigurationService;
     }
 }

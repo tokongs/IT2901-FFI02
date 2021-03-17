@@ -43,7 +43,8 @@ public class Mqtt5PublishEncoder extends Mqtt5MessageWithUserPropertiesEncoder<P
     private static final int FIXED_HEADER = MessageType.PUBLISH.ordinal() << 4;
 
     public Mqtt5PublishEncoder(final @NotNull MessageDroppedService messageDroppedService,
-                               final @NotNull SecurityConfigurationService securityConfigurationService) {
+                               final @NotNull SecurityConfigurationService securityConfigurationService){
+
         super(messageDroppedService, securityConfigurationService);
     }
 

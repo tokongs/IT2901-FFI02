@@ -22,6 +22,7 @@ import com.hivemq.codec.encoder.mqtt5.Mqtt5PayloadFormatIndicator;
 import com.hivemq.codec.encoder.mqtt5.UnsignedDataTypes;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.annotations.Nullable;
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.mqtt.message.MessageType;
 import com.hivemq.mqtt.message.QoS;
 import com.hivemq.mqtt.message.mqtt5.Mqtt5UserProperties;
@@ -55,6 +56,7 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
     private @Nullable byte[] payload;
     private boolean duplicateDelivery;
     private final @NotNull String topic;
+    private TopicPriority topicPriority;
     private final boolean retain;
     private final @NotNull QoS qoS;
 
@@ -78,6 +80,7 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
     PUBLISH(
             @NotNull final String hivemqId,
             @NotNull final String topic,
+            @NotNull final TopicPriority topicPriority,
             @Nullable final byte[] payload,
             @NotNull final QoS qos,
             final boolean isRetain,
@@ -98,10 +101,12 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
         super(userProperties);
 
         Preconditions.checkNotNull(hivemqId, "HivemqId may never be null");
-        Preconditions.checkNotNull(topic, "Topic may never be null");
+        Preconditions.checkNotNull(topicPriority, "TopicPriority may never be null");
+        //Preconditions.checkNotNull(topic, "Topic may never be null");
         Preconditions.checkNotNull(qos, "Quality of service may never be null");
 
         this.topic = topic;
+        this.topicPriority = topicPriority;
         this.payload = payload;
         this.qoS = qos;
         this.retain = isRetain;
@@ -137,6 +142,7 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
     PUBLISH(
             @NotNull final String hivemqId,
             @NotNull final String topic,
+            @NotNull final TopicPriority topicPriority,
             @Nullable final byte[] payload,
             @NotNull final QoS qos,
             final boolean isRetain,
@@ -155,6 +161,7 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
 
         this.hivemqId = hivemqId;
         this.topic = topic;
+        this.topicPriority = topicPriority;
         this.payload = payload;
         this.qoS = qos;
         this.retain = isRetain;
@@ -192,6 +199,7 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
 
         this(publish.getHivemqId(),
                 publish.getTopic(),
+                publish.getTopicPriority(),
                 publish.getPayload(),
                 publish.getQoS(),
                 publish.isRetain(),
@@ -272,7 +280,12 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
     @NotNull
     @Override
     public String getTopic() {
-        return topic;
+        return topicPriority.getTopicFilter();
+    }
+
+    @NotNull
+    public TopicPriority getTopicPriority() {
+        return topicPriority;
     }
 
     @Override
@@ -352,6 +365,7 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
 
         int result = Objects.hash(timestamp,
                 topic,
+                topicPriority,
                 duplicateDelivery,
                 retain,
                 qoS,

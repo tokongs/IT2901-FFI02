@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present HiveMQ and the HiveMQ Community
+ * Copyright 2019-present HiveMQ GmbH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,32 @@
  * limitations under the License.
  */
 
-package com.hivemq.client.extensions;
+package com.hivemq.extensions.priority;
 
-import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
-import org.jetbrains.annotations.NotNull;
+import com.hivemq.extension.sdk.api.annotations.NotNull;
+
 
 public class TopicPriority {
 
-    private final @NotNull MqttTopicFilter filter;
-    private final @NotNull PriorityClass priority;
+    private final @NotNull String filter;
+    private final @NotNull PriorityClass priorityClass;
+    private final @NotNull int priority;
 
-    public TopicPriority(@NotNull MqttTopicFilter filter, @NotNull PriorityClass priority) {
+    public TopicPriority(@NotNull String filter, @NotNull PriorityClass priorityClass, @NotNull int priority) {
         this.filter = filter;
+        this.priorityClass = priorityClass;
         this.priority = priority;
     }
 
-    public MqttTopicFilter getTopicFilter(){
+    public String getTopicFilter(){
         return filter;
     }
 
     public PriorityClass getPriorityClass(){
+        return priorityClass;
+    }
+
+    public int getPriority(){
         return priority;
     }
 }

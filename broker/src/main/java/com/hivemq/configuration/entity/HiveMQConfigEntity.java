@@ -35,6 +35,10 @@ public class HiveMQConfigEntity {
     @XmlElementRef(required = false)
     private @NotNull List<ListenerEntity> listeners = new ArrayList<>();
 
+    @XmlElementWrapper(name = "priorities")
+    @XmlElementRef(required = false)
+    private @NotNull List<TopicPriorityEntity> priorities = new ArrayList<>();
+
     @XmlElementRef(required = false)
     private @NotNull MqttConfigEntity mqtt = new MqttConfigEntity();
 
@@ -50,8 +54,13 @@ public class HiveMQConfigEntity {
     @XmlElementRef(required = false)
     private @NotNull PersistenceEntity persistence = new PersistenceEntity();
 
+
     public @NotNull List<ListenerEntity> getListenerConfig() {
         return listeners;
+    }
+
+    public @NotNull List<TopicPriorityEntity> getTopicPriorityConfig() {
+        return priorities;
     }
 
     public @NotNull MqttConfigEntity getMqttConfig() {
@@ -73,4 +82,5 @@ public class HiveMQConfigEntity {
     public @NotNull PersistenceEntity getPersistenceConfig() {
         return persistence;
     }
+
 }
