@@ -1434,7 +1434,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
                 .withQoS(qos)
                 .withPublishId(1L)
                 .withPayload("message".getBytes())
-                .withTopicPriority(new TopicPriority("topic/try/1", PriorityClass.ROUTINE, 1);
+                .withTopicPriority(new TopicPriority("topic/try/1", PriorityClass.ROUTINE, 1))
                 .withHivemqId("hivemqId")
                 .withPersistence(payloadPersistence)
                 .withMessageExpiryInterval(expiryInterval)
