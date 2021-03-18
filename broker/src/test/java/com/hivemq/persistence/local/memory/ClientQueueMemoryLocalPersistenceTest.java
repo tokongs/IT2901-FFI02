@@ -1055,7 +1055,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         final ImmutableList<PUBLISH> all =
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 10000L, 0);
         assertEquals(5, all.size());
-        assertEquals("topic/0", all.get(0).getTopic());
+        assertEquals("topic/try/0", all.get(0).getTopic());
         assertEquals(new TopicPriority("topic/try/1", PriorityClass.FLASH, 1), all.get(1).getTopic());
     }
 
