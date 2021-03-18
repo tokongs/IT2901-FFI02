@@ -20,9 +20,11 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.ImmutableIntArray;
+import com.hivemq.bootstrap.netty.ioc.annotations.Client;
 import com.hivemq.configuration.service.InternalConfigurations;
 import com.hivemq.configuration.service.TopicPriorityConfigurationService;
 import com.hivemq.extension.sdk.api.annotations.Immutable;
+import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extensions.priority.PriorityClass;
 import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.metrics.HiveMQMetrics;
@@ -351,12 +353,32 @@ public class ClientQueueMemoryLocalPersistenceTest {
     }
 
     @Test
+    public void test_get_lowest_priority() {
+
+        TopicPriority[] tpList = new TopicPriority[6];
+
+        for (int i = 0; i <= 5; i++) {
+            TopicPriority tp = new TopicPriority("topic/flash/" + i, PriorityClass.FLASH, i);
+            tpList[i] = tp;
+            persistence.add(
+                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, tp), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        }
+
+        final ImmutableList<PUBLISH> publishes =
+                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
+
+
+        assertEquals(publishes.get(0).getTopicPriority(), tpList[0]); // checks if lowest priority == 0;
+
+    }
+
+    @Test
     public void test_add_discard_lowest_priority() {
 
         TopicPriority[] tpList = new TopicPriority[6];
 
-        for (int i = 6; i >= 1; i--) {
-            TopicPriority tp = new TopicPriority("topic/flash/", PriorityClass.FLASH, i);
+        for (int i = 0; i <= 5; i--) {
+            TopicPriority tp = new TopicPriority("topic/flash/" + i, PriorityClass.FLASH, i);
             tpList[i] = tp;
             persistence.add(
                     "client", false, createPublish(i, QoS.AT_LEAST_ONCE, tp), 3L, DISCARD_LOWEST_PRIORITY, false, 0);
@@ -369,9 +391,9 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
         final ImmutableList<TopicPriority> TopicPriorities = publishes.stream().map(PUBLISH::getTopicPriority).collect(ImmutableList.toImmutableList());
         assertEquals(3, publishes.size());
-        assertTrue(TopicPriorities.contains(tpList[0]));
-        assertTrue(TopicPriorities.contains(tpList[1]));
-        assertTrue(TopicPriorities.contains(tpList[2]));
+        assertTrue(TopicPriorities.contains(tpList[3])); // priority = 4
+        assertTrue(TopicPriorities.contains(tpList[4])); // priority = 5
+        assertTrue(TopicPriorities.contains(tpList[5])); // priority = 6
         verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
     }
 
@@ -1344,24 +1366,28 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
     @Test
     public void test_get_topic_priority() {
-        persistence.add("client", false, createPublish(1, QoS.AT_MOST_ONCE, "topic/"), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(2, QoS.AT_MOST_ONCE, "topic/"), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(3, QoS.AT_MOST_ONCE, "topic/"), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, new TopicPriority("topic/routine/1", PriorityClass.ROUTINE, 1)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(3, QoS.AT_LEAST_ONCE, new TopicPriority("topic/priority/2", PriorityClass.PRIORITY, 2)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(4, QoS.AT_LEAST_ONCE, new TopicPriority("topic/immediate/3", PriorityClass.IMMEDIATE, 3)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
+        persistence.add("client", false, createPublish(5, QoS.AT_LEAST_ONCE, new TopicPriority("topic/flash/4", PriorityClass.FLASH, 4)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
 
-        //persistence.add("client", false, createPublish(4, QoS.AT_MOST_ONCE, "topic"), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
+        final ImmutableList<PUBLISH> publishes = persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4), byteLimit, 0);
 
-        final ImmutableList<PUBLISH> publishes = persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3), byteLimit, 0);
-        int priority1 = ClientQueueMemoryLocalPersistence.getPriority(publishes.get(0).getTopicPriority());
-        int priority2 = ClientQueueMemoryLocalPersistence.getPriority(publishes.get(1).getTopicPriority());
-        int priority3 = ClientQueueMemoryLocalPersistence.getPriority(publishes.get(2).getTopicPriority());
-        //int priority4 = ClientQueueMemoryLocalPersistence.getTopicPriority(publishes.get(3).getTopic());
+        final ImmutableList<PriorityClass> PriorityClasses = publishes.stream().map(PUBLISH::getTopicPriority).map(TopicPriority::getPriorityClass).collect(ImmutableList.toImmutableList());
+        final ImmutableList<Integer> Priorities = publishes.stream().map(PUBLISH::getTopicPriority).map(TopicPriority::getPriority).collect(ImmutableList.toImmutableList());
 
-        //assertEquals(4, publishes.size());
+        assertEquals(4, PriorityClasses.size());
+        assertEquals(4, Priorities.size());
 
-        assertEquals(1, priority1); //check for 1 digit
-        assertEquals(1234567890, priority2); //check for 10 digits
-        assertEquals("", priority3); //check for empty priority
-        //assertEquals("", priority4); //check for empty priority
+        assertTrue(PriorityClasses.contains(PriorityClass.ROUTINE));
+        assertTrue(PriorityClasses.contains(PriorityClass.PRIORITY));
+        assertTrue(PriorityClasses.contains(PriorityClass.IMMEDIATE));
+        assertTrue(PriorityClasses.contains(PriorityClass.FLASH));
+
+        assertTrue(Priorities.contains(1));
+        assertTrue(Priorities.contains(2));
+        assertTrue(Priorities.contains(3));
+        assertTrue(Priorities.contains(4));
     }
 
 

@@ -78,7 +78,7 @@ public class ClientQueueMemoryLocalPersistence
     @NotNull
     private final Map<String, Messages> @NotNull [] sharedBuckets;
 
-    private static class Messages {
+    static class Messages {
 
         @NotNull
         final PriorityQueue<MessageWithID> qos1Or2Messages = new PriorityQueue<>(
@@ -1016,10 +1016,68 @@ public class ClientQueueMemoryLocalPersistence
     /**
      * Gets the lowest priority message among messages.
      *
-     * @param messages the messages to search amongst
+     * @param messages     the messages to search amongst
+     * @param retainedOnly something about subscribe
      * @return the lowest priority message
      */
     private PublishWithRetained getLowestPriorityMessage(
+            final @NotNull Messages messages,
+            final boolean retainedOnly
+    ) {
+        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
+
+        PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
+                reversedPWRComparator
+        );
+        messagePQ.addAll(messages.qos0Messages);
+
+        messagePQ.addAll(
+                messages.qos1Or2Messages
+                        .stream()
+                        .filter(m -> m instanceof PublishWithRetained)
+                        .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
+                        .map(m -> (PublishWithRetained) m)
+                        .filter(
+                                m -> !((retainedOnly && !m.retained) || (!retainedOnly && m.retained))
+                        )
+                        .collect(Collectors.toList())
+        );
+
+        PublishWithRetained lowestPrioritizedMessage = messagePQ.poll();
+
+        if (lowestPrioritizedMessage == null) {
+            return null;
+        } else if (messagePQ.peek() == null) {
+            return lowestPrioritizedMessage;
+        }
+
+        PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(
+                new PublishWithRetainedTimeComparator()
+        );
+        timeMessages.add(lowestPrioritizedMessage);
+
+        while (
+                !messagePQ.isEmpty() &&
+                        (
+                                reversedPWRComparator.compare(
+                                        messagePQ.peek(),
+                                        lowestPrioritizedMessage
+                                ) == 0
+                        )
+        ) {
+            timeMessages.add(messagePQ.poll());
+        }
+
+        return timeMessages.peek();
+    }
+
+    /**
+     * Gets the lowest priority message among messages.
+     *
+     * @param messages the messages to search amongst
+     * @return the lowest priority message
+     */
+    PublishWithRetained getLowestPriorityMessage(
             final @NotNull Messages messages
     ) {
         ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
@@ -1068,20 +1126,20 @@ public class ClientQueueMemoryLocalPersistence
     }
 
     /**
-     * Gets the lowest priority message among messages.
+     * Gets the highgest priority message among messages.
      *
      * @param messages     the messages to search amongst
      * @param retainedOnly something about subscribe
-     * @return the lowest priority message
+     * @return the highest priority message
      */
-    private PublishWithRetained getLowestPriorityMessage(
+    private PublishWithRetained getHighestPriorityMessage(
             final @NotNull Messages messages,
             final boolean retainedOnly
     ) {
-        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
+        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
 
         PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-                reversedPWRComparator
+                pWRComparator
         );
         messagePQ.addAll(messages.qos0Messages);
 
@@ -1097,25 +1155,78 @@ public class ClientQueueMemoryLocalPersistence
                         .collect(Collectors.toList())
         );
 
-        PublishWithRetained lowestPrioritizedMessage = messagePQ.poll();
+        PublishWithRetained highestPrioritizedMessage = messagePQ.poll();
 
-        if (lowestPrioritizedMessage == null) {
+        if (highestPrioritizedMessage == null) {
             return null;
         } else if (messagePQ.peek() == null) {
-            return lowestPrioritizedMessage;
+            return highestPrioritizedMessage;
         }
 
         PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(
                 new PublishWithRetainedTimeComparator()
         );
-        timeMessages.add(lowestPrioritizedMessage);
+        timeMessages.add(highestPrioritizedMessage);
 
         while (
                 !messagePQ.isEmpty() &&
                         (
-                                reversedPWRComparator.compare(
+                                pWRComparator.compare(
                                         messagePQ.peek(),
-                                        lowestPrioritizedMessage
+                                        highestPrioritizedMessage
+                                ) == 0
+                        )
+        ) {
+            timeMessages.add(messagePQ.poll());
+        }
+
+        return timeMessages.peek();
+    }
+
+    /**
+     * Gets the highest priority message among messages.
+     *
+     * @param messages the messages to search amongst
+     * @return the highest priority message
+     */
+    PublishWithRetained getHighestPriorityMessage(
+            final @NotNull Messages messages
+    ) {
+        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
+
+        PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
+                pWRComparator
+        );
+        messagePQ.addAll(messages.qos0Messages);
+
+        messagePQ.addAll(
+                messages.qos1Or2Messages
+                        .stream()
+                        .filter(m -> m instanceof PublishWithRetained)
+                        .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
+                        .map(m -> (PublishWithRetained) m)
+                        .collect(Collectors.toList())
+        );
+
+        PublishWithRetained highestPrioritizedMessage = messagePQ.poll();
+
+        if (highestPrioritizedMessage == null) {
+            return null;
+        } else if (messagePQ.peek() == null) {
+            return highestPrioritizedMessage;
+        }
+
+        PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(
+                new PublishWithRetainedTimeComparator()
+        );
+        timeMessages.add(highestPrioritizedMessage);
+
+        while (
+                !messagePQ.isEmpty() &&
+                        (
+                                pWRComparator.compare(
+                                        messagePQ.peek(),
+                                        highestPrioritizedMessage
                                 ) ==
                                         0
                         )
@@ -1125,6 +1236,7 @@ public class ClientQueueMemoryLocalPersistence
 
         return timeMessages.peek();
     }
+
 
     /**
      * @return true if a message was discarded, else false
@@ -1320,9 +1432,9 @@ public class ClientQueueMemoryLocalPersistence
                 m2TP = new TopicPriority("pubrel", PriorityClass.ROUTINE, 1000);
             }
 
-            if (m1TP == null){
+            if (m1TP == null) {
                 return -1;
-            }else if (m2TP == null){
+            } else if (m2TP == null) {
                 return 1;
             }
 
@@ -1418,7 +1530,7 @@ public class ClientQueueMemoryLocalPersistence
         return topicPriority.getPriority();
     }
 
-    private static class PublishWithRetainedTimeComparator
+    static class PublishWithRetainedTimeComparator
             implements Comparator<PublishWithRetained> {
 
         @Override
