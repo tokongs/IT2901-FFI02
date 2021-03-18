@@ -361,10 +361,6 @@ public class ClientQueueMemoryLocalPersistenceTest {
             persistence.add(
                     "client", false, createPublish(i, QoS.AT_LEAST_ONCE, tp), 3L, DISCARD_LOWEST_PRIORITY, false, 0);
         }
-        /*for (int i = 6; i >= 1; i--) {
-            persistence.add(
-                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, new TopicPriority("topic/flash/", PriorityClass.FLASH, i)), 3L, DISCARD_LOWEST_PRIORITY, false, 0);
-        }*/
 
         assertEquals(3, persistence.size("client", false, 0));
 
@@ -441,7 +437,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
             persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topic/1", i), 100L, DISCARD, false, 0);
         }
         final String uniqueId = persistence.replace("client", new PUBREL(4), 0);
-         assertNull(uniqueId);
+        assertNull(uniqueId);
     }
 
     @Test
@@ -984,7 +980,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
     public void test_batched_add_discard_lowest_priority() {
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
-        TopicPriority tp1 = new TopicPriority("topic/start/1", PriorityClass.FLASH,1);
+        TopicPriority tp1 = new TopicPriority("topic/start/1", PriorityClass.FLASH, 1);
 
         persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, tp1), 3, DISCARD_LOWEST_PRIORITY, false, 0);
         persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, tp1), 3, DISCARD_LOWEST_PRIORITY, false, 0);
@@ -992,7 +988,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
 
         for (int i = 0; i < 3; i++) {
-            publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, new TopicPriority("topic/try/"+i, PriorityClass.FLASH, i) ));
+            publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i)));
         }
         persistence.add("client", false, publishes.build(), 3, DISCARD_LOWEST_PRIORITY, false, 0);
 
@@ -1340,11 +1336,11 @@ public class ClientQueueMemoryLocalPersistenceTest {
     }
 
     /*
-    * test_publish_with_retained_time_comparator
-    * test_publish_with_retained_comparator
-    * test_reversed_publish_with_retained_comparator
-    * test_get_topic_priority
-    * */
+     * test_publish_with_retained_time_comparator
+     * test_publish_with_retained_comparator
+     * test_reversed_publish_with_retained_comparator
+     * test_get_topic_priority
+     * */
 
     @Test
     public void test_get_topic_priority() {
@@ -1370,29 +1366,28 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
 
     @Test
-    public void test_reversed_publish_with_retained_comparator(){
+    public void test_reversed_publish_with_retained_comparator() {
         TopicPriority topicPriorityFLASH100 = new TopicPriority("topic/flash/100", PriorityClass.FLASH, 100);
         TopicPriority topicPriorityFLASH99 = new TopicPriority("topic/flash/99", PriorityClass.FLASH, 99);
         TopicPriority topicPriorityROUTINE0 = new TopicPriority("topic/routine/0", PriorityClass.ROUTINE, 0);
         TopicPriority topicPriorityPRIORITY0 = new TopicPriority("topic/routine/0", PriorityClass.PRIORITY, 0);
 
-        PublishWithRetained pwrFlash100 = new PublishWithRetained(createPublish(1,QoS.AT_LEAST_ONCE,topicPriorityFLASH100), false);
-        PublishWithRetained pwrFlash100_2 = new PublishWithRetained(createPublish(1,QoS.AT_LEAST_ONCE,topicPriorityFLASH100), false);
+        PublishWithRetained pwrFlash100 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityFLASH100), false);
+        PublishWithRetained pwrFlash100_2 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityFLASH100), false);
 
-        PublishWithRetained pwrFlash99 = new PublishWithRetained(createPublish(1,QoS.AT_LEAST_ONCE,topicPriorityFLASH99), false);
-        PublishWithRetained pwrRoutine0 = new PublishWithRetained(createPublish(1,QoS.AT_LEAST_ONCE,topicPriorityROUTINE0), false);
-        PublishWithRetained pwrPriority0 = new PublishWithRetained(createPublish(1,QoS.AT_LEAST_ONCE,topicPriorityPRIORITY0), false);
+        PublishWithRetained pwrFlash99 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityFLASH99), false);
+        PublishWithRetained pwrRoutine0 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityROUTINE0), false);
+        PublishWithRetained pwrPriority0 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityPRIORITY0), false);
 
 
         ClientQueueMemoryLocalPersistence.ReversedPublishWithRetainedComparator rPWRC = new ClientQueueMemoryLocalPersistence.ReversedPublishWithRetainedComparator();
 
-        assertEquals(0, rPWRC.compare(pwrFlash100,pwrFlash100_2));  // same class           same priority
-        assertEquals(1, rPWRC.compare(pwrFlash99,pwrFlash100));     // same class           p1 has lower priority
-        assertEquals(1, rPWRC.compare(pwrPriority0,pwrRoutine0));   // p1 has lower class   same priority
-        assertEquals(1, rPWRC.compare(pwrFlash100,pwrRoutine0));    // p1 has lower class   p2 has lower priority
+        assertEquals(0, rPWRC.compare(pwrFlash100, pwrFlash100_2));  // same class           same priority
+        assertEquals(1, rPWRC.compare(pwrFlash99, pwrFlash100));     // same class           p1 has lower priority
+        assertEquals(1, rPWRC.compare(pwrPriority0, pwrRoutine0));   // p1 has lower class   same priority
+        assertEquals(1, rPWRC.compare(pwrFlash100, pwrRoutine0));    // p1 has lower class   p2 has lower priority
 
     }
-
 
 
     private ImmutableIntArray createPacketIds(final int start, final int size) {
