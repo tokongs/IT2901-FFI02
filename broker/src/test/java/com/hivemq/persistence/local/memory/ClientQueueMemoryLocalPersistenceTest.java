@@ -125,7 +125,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         for (int i = 0; i < publishes.length; i++) {
             publishes[i] = createPublish(10 + i, (i % 2 == 0) ? QoS.EXACTLY_ONCE : QoS.AT_LEAST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i));
         }
-        final PUBLISH otherPublish = createPublish(14, QoS.EXACTLY_ONCE, "topic/5");
+        final PUBLISH otherPublish = createPublish(14, QoS.EXACTLY_ONCE, new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4));
 
         persistence.add("client10", false, otherPublish, 100L, DISCARD, false, 0);
         for (final PUBLISH publish : publishes) {
@@ -150,7 +150,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         for (int i = 0; i < publishes.length; i++) {
             publishes[i] = createPublish(10 + i, (i % 2 == 0) ? QoS.EXACTLY_ONCE : QoS.AT_LEAST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i));
         }
-        final PUBLISH otherPublish = createPublish(14, QoS.EXACTLY_ONCE, "topic/5");
+        final PUBLISH otherPublish = createPublish(14, QoS.EXACTLY_ONCE, new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4));
 
         persistence.add("client10", false, otherPublish, 100L, DISCARD, false, 0);
         for (final PUBLISH publish : publishes) {
@@ -327,7 +327,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
         assertEquals(3, publishes.size());
         assertEquals("topic/4", publishes.get(0).getTopic());
-        assertEquals("topic/5", publishes.get(1).getTopic());
+        assertEquals(new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4), publishes.get(1).getTopic());
         assertEquals("topic/6", publishes.get(2).getTopic());
         verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
     }*/
@@ -487,11 +487,11 @@ public class ClientQueueMemoryLocalPersistenceTest {
                 "client", false, createBigPublish(0, QoS.AT_MOST_ONCE, new TopicPriority("topic/try/1", PriorityClass.FLASH, 1), 1, queueLimit), 100L, DISCARD, false,
                 0);
         persistence.add(
-                "client", false, createBigPublish(1, QoS.AT_MOST_ONCE, "topic/5", 2, queueLimit), 100L, DISCARD, false,
+                "client", false, createBigPublish(1, QoS.AT_MOST_ONCE, new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4), 2, queueLimit), 100L, DISCARD, false,
                 0);
 
         verify(payloadPersistence).decrementReferenceCounter(2);
-        verify(messageDroppedService).qos0MemoryExceeded(eq("client"), eq("topic/5"), eq(0), anyLong(), anyLong());
+        verify(messageDroppedService).qos0MemoryExceeded(eq("client"), eq(new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4)), eq(0), anyLong(), anyLong());
     }
 
     @Test
@@ -503,10 +503,10 @@ public class ClientQueueMemoryLocalPersistenceTest {
                 "client", false, createBigPublish(0, QoS.AT_MOST_ONCE, new TopicPriority("topic/try/1", PriorityClass.FLASH, 1), 1, queueLimit), 100L, DISCARD, false,
                 0);
         persistence.add(
-                "group", true, createBigPublish(1, QoS.AT_MOST_ONCE, "topic/5", 2, queueLimit), 100L, DISCARD, false, 0);
+                "group", true, createBigPublish(1, QoS.AT_MOST_ONCE, new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4), 2, queueLimit), 100L, DISCARD, false, 0);
 
         verify(payloadPersistence).decrementReferenceCounter(2);
-        verify(messageDroppedService).qos0MemoryExceededShared(eq("group"), eq("topic/5"), eq(0), anyLong(), anyLong());
+        verify(messageDroppedService).qos0MemoryExceededShared(eq("group"), eq(new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4)), eq(0), anyLong(), anyLong());
     }
 
     @Test
@@ -974,7 +974,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals(3, all.size());
         assertEquals("topic/3", all.get(0).getTopic());
         assertEquals("topic/4", all.get(1).getTopic());
-        assertEquals("topic/5", all.get(2).getTopic());
+        assertEquals(new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4), all.get(2).getTopic());
     }*/
 
     @Test
