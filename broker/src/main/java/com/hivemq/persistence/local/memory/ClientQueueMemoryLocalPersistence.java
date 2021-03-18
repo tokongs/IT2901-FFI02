@@ -239,6 +239,7 @@ public class ClientQueueMemoryLocalPersistence
                     } else {
                         PublishWithRetained pwr = new PublishWithRetained(publish, false);
 
+
                         int result = pwrC.compare(
                                 pwr,
                                 Objects.requireNonNull(getHighestPriorityMessage(messages, false))
@@ -1239,46 +1240,55 @@ public class ClientQueueMemoryLocalPersistence
 
 
     /**
+     * Discards the message if it exists.
+     *
+     * @param queueId       queueId
+     * @param shared        if the topic is shared
+     * @param messages      all the messages
+     * @param pwr           the message to discard
      * @return true if a message was discarded, else false
      */
-    private boolean discardLowestPriority(
+    private boolean discardPublishWithRetained(
             final @NotNull String queueId,
             final boolean shared,
             final @NotNull Messages messages,
-            final boolean retainedOnly
+            final @NotNull PublishWithRetained pwr
     ) {
-        PublishWithRetained lowestPrioritizedMessage = getLowestPriorityMessage(
-                messages,
-                retainedOnly
-        );
 
-        if (lowestPrioritizedMessage == null) {
+        if (pwr == null) {
             return false;
-        } else if (messages.qos0Messages.contains(lowestPrioritizedMessage)) {
+        } else if (messages.qos0Messages.contains(pwr)) {
             logAndDecrementPayloadReference(
-                    lowestPrioritizedMessage,
+                    pwr,
                     shared,
                     queueId
             );
-            messages.qos0Messages.remove(lowestPrioritizedMessage);
+            messages.qos0Messages.remove(pwr);
             return true;
-        } else if (messages.qos1Or2Messages.contains(lowestPrioritizedMessage)) {
+        } else if (messages.qos1Or2Messages.contains(pwr)) {
             logAndDecrementPayloadReference(
-                    lowestPrioritizedMessage,
+                    pwr,
                     shared,
                     queueId
             );
-            messages.qos1Or2Messages.remove(lowestPrioritizedMessage);
+            messages.qos1Or2Messages.remove(pwr);
             return true;
         }
 
         return false;
     }
 
+
     /**
+     * Discards the message if it exists
+     *
+     * @param queueId       queueId
+     * @param shared        if topic is shared
+     * @param messages      all the messages
+     * @param retainedOnly  if the message is to be retained
      * @return true if a message was discarded, else false
      */
-    private boolean discardHighestPriority(
+    private boolean discardLowestPriority(
             final @NotNull String queueId,
             final boolean shared,
             final @NotNull Messages messages,
@@ -1522,13 +1532,13 @@ public class ClientQueueMemoryLocalPersistence
     static class ReversedPublishWithRetainedComparator implements Comparator<PublishWithRetained> {
 
         /**
-         * Compares two PublishWithRetained's to decide which has lowest priority.
+         * Compares two PublishWithRetained's to decide which has highest priority.
          *
-         * @param p1 as the first PublishWithRetained
-         * @param p2 as the second PublishWithRetained
-         * @return -1 if p2 has lowest priority,
-         * 0 if they are equal or
-         * 1 if p1 has lowest priority
+         * @param p1    as the first PublishWithRetained
+         * @param p2    as the second PublishWithRetained
+         * @return  -1 if p1 has highest priority,
+         *          0 if they are equal or
+         *          1 if p2 has highest priority
          */
         @Override
         public int compare(PublishWithRetained p1, PublishWithRetained p2) {
