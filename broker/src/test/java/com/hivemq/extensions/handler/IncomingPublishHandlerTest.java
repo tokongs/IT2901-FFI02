@@ -35,6 +35,7 @@ import com.hivemq.extensions.executor.PluginTaskExecutorService;
 import com.hivemq.extensions.executor.PluginTaskExecutorServiceImpl;
 import com.hivemq.extensions.executor.task.PluginTaskExecutor;
 import com.hivemq.extensions.packets.general.ModifiableDefaultPermissionsImpl;
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.mqtt.handler.disconnect.MqttServerDisconnector;
 import com.hivemq.mqtt.handler.publish.DropOutgoingPublishesHandler;
 import com.hivemq.mqtt.handler.publish.OrderedTopicService;
@@ -794,7 +795,17 @@ public class IncomingPublishHandlerTest {
         }
 
         @Override
+        public void qos0MemoryExceeded(String clientId, TopicPriority topicPriority, int qos, long currentMemory, long maxMemory) {
+
+        }
+
+        @Override
         public void queueFull(final String clientId, final String topic, final int qos) {
+
+        }
+
+        @Override
+        public void queueFull(String clientId, TopicPriority topicPriority, int qos) {
 
         }
 
@@ -804,7 +815,17 @@ public class IncomingPublishHandlerTest {
         }
 
         @Override
+        public void queueFullShared(String sharedId, TopicPriority topicPriority, int qos) {
+
+        }
+
+        @Override
         public void notWritable(final String clientId, final String topic, final int qos) {
+
+        }
+
+        @Override
+        public void notWritable(String clientId, TopicPriority topicPString, int qos) {
 
         }
 
@@ -814,12 +835,27 @@ public class IncomingPublishHandlerTest {
         }
 
         @Override
+        public void extensionPrevented(String clientId, TopicPriority topicPriority, int qos) {
+
+        }
+
+        @Override
         public void failed(final String clientId, final String topic, final int qos) {
 
         }
 
         @Override
+        public void failed(String clientId, TopicPriority topicPriority, int qos) {
+
+        }
+
+        @Override
         public void publishMaxPacketSizeExceeded(final String clientId, final String topic, final int qos, final long maximumPacketSize, final long packetSize) {
+
+        }
+
+        @Override
+        public void publishMaxPacketSizeExceeded(String clientId, TopicPriority topicPriority, int qos, long maximumPacketSize, long packetSize) {
 
         }
 
@@ -834,7 +870,17 @@ public class IncomingPublishHandlerTest {
         }
 
         @Override
+        public void failedShared(String group, TopicPriority TopicPriorirty, int qos) {
+
+        }
+
+        @Override
         public void qos0MemoryExceededShared(final String clientId, final String topic, final int qos, final long currentMemory, final long maxMemory) {
+
+        }
+
+        @Override
+        public void qos0MemoryExceededShared(String clientId, TopicPriority topicPriority, int qos, long currentMemory, long maxMemory) {
 
         }
     }

@@ -15,6 +15,9 @@
  */
 package com.hivemq.mqtt.message.dropping;
 
+import com.hivemq.configuration.reader.TopicPriorirtyConfigurator;
+import com.hivemq.extensions.priority.TopicPriority;
+
 /**
  * The MessageDroppedService is used to centralize the update of dropped message metrics. The corresponding method
  * should be called, whenever a message is dropped.
@@ -29,9 +32,19 @@ public interface MessageDroppedService {
     void qos0MemoryExceeded(final String clientId, final String topic, final int qos, final long currentMemory, final long maxMemory);
 
     /**
+     * Update the metrics if a qos 0 message was dropped because the queue for the client was not yet empty
+     */
+    void qos0MemoryExceeded(final String clientId, final TopicPriority topicPriority, final int qos, final long currentMemory, final long maxMemory);
+    
+    /**
      * Update the metrics if a message was dropped because the client message queue was full
      */
     void queueFull(final String clientId, final String topic, final int qos);
+
+    /**
+     * Update the metrics if a message was dropped because the client message queue was full
+     */
+    void queueFull(final String clientId, final TopicPriority topicPriority, final int qos);
 
     /**
      * Update the metrics if a message was dropped because the shared subscription message queue was full
@@ -39,24 +52,49 @@ public interface MessageDroppedService {
     void queueFullShared(final String sharedId, final String topic, final int qos);
 
     /**
+     * Update the metrics if a message was dropped because the shared subscription message queue was full
+     */
+    void queueFullShared(final String sharedId, final TopicPriority topicPriority, final int qos);
+
+    /**
      * Update the metrics if a qos 0 message was dropped because the client socket was not writable
      */
     void notWritable(final String clientId, final String topic, final int qos);
+
+    /**
+     * Update the metrics if a qos 0 message was dropped because the client socket was not writable
+     */
+    void notWritable(final String clientId, final TopicPriority topicPString, final int qos);
 
     /**
      * Update the metrics if a PUBLISH was dropped because an extension prevented onward delivery.
      */
     void extensionPrevented(final String clientId, final String topic, final int qos);
 
+        /**
+     * Update the metrics if a PUBLISH was dropped because an extension prevented onward delivery.
+     */
+    void extensionPrevented(final String clientId, final TopicPriority topicPriority, final int qos);
+
     /**
      * Update the metrics if a message was dropped because of an internal error
      */
     void failed(final String clientId, final String topic, final int qos);
 
+        /**
+     * Update the metrics if a message was dropped because of an internal error
+     */
+    void failed(final String clientId, final TopicPriority topicPriority, final int qos);
+
     /**
      * Update the metrics if a PUBLISH was dropped because the packet size exceeded.
      */
     void publishMaxPacketSizeExceeded(final String clientId, final String topic, final int qos, final long maximumPacketSize, final long packetSize);
+
+    /**
+     * Update the metrics if a PUBLISH was dropped because the packet size exceeded.
+     */
+    void publishMaxPacketSizeExceeded(final String clientId, final TopicPriority topicPriority, final int qos, final long maximumPacketSize, final long packetSize);
 
     /**
      * Update the metrics if any mqtt message but PUBLISH was dropped because the packet size exceeded.
@@ -65,6 +103,10 @@ public interface MessageDroppedService {
 
     void failedShared(final String group, final String topic, final int qos);
 
+    void failedShared(final String group, final TopicPriority TopicPriorirty, final int qos);
+
     void qos0MemoryExceededShared(final String clientId, final String topic, final int qos, final long currentMemory, final long maxMemory);
+
+    void qos0MemoryExceededShared(final String clientId, final TopicPriority topicPriority, final int qos, final long currentMemory, final long maxMemory);
 
 }
