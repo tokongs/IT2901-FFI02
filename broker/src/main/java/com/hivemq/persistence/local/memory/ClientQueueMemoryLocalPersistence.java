@@ -1282,7 +1282,6 @@ public class ClientQueueMemoryLocalPersistence
       this.retained = retained;
     }
 
-<<<<<<< HEAD
     private int getEstimatedSize() {
       return (
         getEstimatedSizeInMemory() + // publish
@@ -1291,70 +1290,38 @@ public class ClientQueueMemoryLocalPersistence
       ); // retain flag
     }
   }
+//     /**
+//      * Qos1 or Qos2 Message Comparator
+//      */
+//     private static class MessageWithIDComparator implements Comparator<MessageWithID> {
 
-  /**
-   * Qos1 or Qos2 Message Comparator
-   */
-  private static class MessageWithIDComparator
-    implements Comparator<MessageWithID> {
-=======
-    /**
-     * Qos1 or Qos2 Message Comparator
-     */
-    private static class MessageWithIDComparator implements Comparator<MessageWithID> {
+//     @Override
+//     public int compare(MessageWithID m1, MessageWithID m2) {
+//       int m1Topic = 5;
+//       int m2Topic = 5;
+//       if (m1 instanceof PublishWithRetained) {
+//         final PublishWithRetained publish = (PublishWithRetained) m1;
+//         m1Topic = getTopicPriority(publish.getTopic());
+//       } else if (m1 instanceof PubrelWithRetained) {
+//         System.out.print("this is pubrel" + m1);
+//         m1Topic = 5;
+//         // final PubrelWithRetained pubrel = (PubrelWithRetained) m1;
+//         // m1Topic = getTopicPriority(pubrel.getTopic())
+//       }
 
-        @Override
-        public int compare(MessageWithID m1, MessageWithID m2) {
-            int m1Topic = 5;
-            int m2Topic = 5;
-            if(m1 instanceof PublishWithRetained) {
-                final PublishWithRetained publish = (PublishWithRetained) m1;
-                m1Topic = getPriority(publish.getTopicPriority());
-            } else if(m1 instanceof PubrelWithRetained) {
-                System.out.print("this is pubrel" + m1);
-                m1Topic = 5;
-                // final PubrelWithRetained pubrel = (PubrelWithRetained) m1;
-                // m1Topic = getTopicPriority(pubrel.getTopic())
-            }
+//       if (m2 instanceof PublishWithRetained) {
+//         final PublishWithRetained publish = (PublishWithRetained) m2;
+//         m2Topic = getTopicPriority(publish.getTopic());
+//       } else if (m2 instanceof PubrelWithRetained) {
+//         System.out.print("this is pubrel" + m2);
+//         m2Topic = 5;
+//         // final PubrelWithRetained pubrel = (PubrelWithRetained) m2;
+//         // m2Topic = getTopicPriority(pubrel.getTopic())
+//       }
 
-            if(m2 instanceof PublishWithRetained) {
-                final PublishWithRetained publish = (PublishWithRetained) m2;
-                m2Topic = getPriority(publish.getTopicPriority());
-            } else if(m2 instanceof PubrelWithRetained) {
-                System.out.print("this is pubrel" + m2);
-                m2Topic = 5;
-                // final PubrelWithRetained pubrel = (PubrelWithRetained) m2;
-                // m2Topic = getTopicPriority(pubrel.getTopic())
-            }
->>>>>>> 381f8566902599e0b8517da59850b8675c240f18
-
-    @Override
-    public int compare(MessageWithID m1, MessageWithID m2) {
-      int m1Topic = 5;
-      int m2Topic = 5;
-      if (m1 instanceof PublishWithRetained) {
-        final PublishWithRetained publish = (PublishWithRetained) m1;
-        m1Topic = getTopicPriority(publish.getTopic());
-      } else if (m1 instanceof PubrelWithRetained) {
-        System.out.print("this is pubrel" + m1);
-        m1Topic = 5;
-        // final PubrelWithRetained pubrel = (PubrelWithRetained) m1;
-        // m1Topic = getTopicPriority(pubrel.getTopic())
-      }
-
-      if (m2 instanceof PublishWithRetained) {
-        final PublishWithRetained publish = (PublishWithRetained) m2;
-        m2Topic = getTopicPriority(publish.getTopic());
-      } else if (m2 instanceof PubrelWithRetained) {
-        System.out.print("this is pubrel" + m2);
-        m2Topic = 5;
-        // final PubrelWithRetained pubrel = (PubrelWithRetained) m2;
-        // m2Topic = getTopicPriority(pubrel.getTopic())
-      }
-
-      return Integer.compare(m1Topic, m2Topic);
-    }
-  }
+//       return Integer.compare(m1Topic, m2Topic);
+//     }
+//   }
 
   /**
    * Qos0 Message Comparator
@@ -1362,14 +1329,6 @@ public class ClientQueueMemoryLocalPersistence
   private static class PublishWithRetainedComparator
     implements Comparator<PublishWithRetained> {
 
-<<<<<<< HEAD
-    @Override
-    public int compare(PublishWithRetained p1, PublishWithRetained p2) {
-      return Integer.compare(
-        getTopicPriority(p1.getTopic()),
-        getTopicPriority(p2.getTopic())
-      );
-=======
         /**
          * Compares two PublishWithRetained's to decide which has lowest priority.
          *
@@ -1396,14 +1355,8 @@ public class ClientQueueMemoryLocalPersistence
 
         }
     
->>>>>>> 381f8566902599e0b8517da59850b8675c240f18
     }
-  }
-
-<<<<<<< HEAD
-  private static class ReversedPublishWithRetainedComparator
-    implements Comparator<PublishWithRetained> {
-=======
+  
     static class ReversedPublishWithRetainedComparator implements Comparator<PublishWithRetained> {
 
         /**
@@ -1431,27 +1384,9 @@ public class ClientQueueMemoryLocalPersistence
             }
 
         }
->>>>>>> 381f8566902599e0b8517da59850b8675c240f18
-
-    @Override
-    public int compare(PublishWithRetained p1, PublishWithRetained p2) {
-      return Integer.compare(
-        getTopicPriority(p2.getTopic()),
-        getTopicPriority(p1.getTopic())
-      );
-    }
-<<<<<<< HEAD
   }
 
-  private static int getTopicPriority(String topic) {
-    if (!topic.contains("/")) {
-      throw new IllegalArgumentException(
-        "A topic must be on the form 'topicname/priority, where priority is an int'. Topic failed:" +
-        topic
-      );
-=======
-
-    static int getPriorityClassAsInt(TopicPriority topicPriority){
+  private static int getPriorityClassAsInt(TopicPriority topicPriority){
 
         switch(topicPriority.getPriorityClass()){
             case FLASH:
@@ -1463,14 +1398,11 @@ public class ClientQueueMemoryLocalPersistence
             case ROUTINE:
                 return 3;
         }
-        return 0;
+        return 4;
     }
-    static int getPriority(TopicPriority topicPriority) {
+    private static int getPriority(TopicPriority topicPriority) {
         return topicPriority.getPriority();
->>>>>>> 381f8566902599e0b8517da59850b8675c240f18
     }
-    return Integer.parseInt(topic.substring(topic.indexOf("/") + 1));
-  }
 
   private static class PublishWithRetainedTimeComparator
     implements Comparator<PublishWithRetained> {
