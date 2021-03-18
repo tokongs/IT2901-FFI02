@@ -241,13 +241,13 @@ public class ClientQueueMemoryLocalPersistence
 
                         int result = pwrC.compare(
                                 pwr,
-                                Objects.requireNonNull(getLowestPriorityMessage(messages, false))
+                                Objects.requireNonNull(getHighestPriorityMessage(messages, false))
                         );
                         switch (result) {
-                            case 1: // publish is lower prioritized
+                            case -1: // publish is lower prioritized
                                 logAndDecrementPayloadReference(publish, shared, queueId);
                                 continue;
-                            case -1: // publish is higher prioritized
+                            case 1: // publish is higher prioritized
                             case 0: // publish is equally prioritized
                                 final boolean discarded = discardLowestPriority(
                                         queueId,
@@ -275,13 +275,13 @@ public class ClientQueueMemoryLocalPersistence
 
                         int result = pwrC.compare(
                                 pwr,
-                                Objects.requireNonNull(getLowestPriorityMessage(messages, false))
+                                Objects.requireNonNull(getHighestPriorityMessage(messages, false))
                         );
                         switch (result) {
-                            case 1: // publish is lower prioritized
+                            case -1: // publish is lower prioritized
                                 logAndDecrementPayloadReference(publish, shared, queueId);
                                 continue;
-                            case -1: // publish is higher prioritized
+                            case 1: // publish is higher prioritized
                             case 0: // publish is equally prioritized
                                 final boolean discarded = discardLowestPriority(
                                         queueId,
@@ -1024,10 +1024,10 @@ public class ClientQueueMemoryLocalPersistence
             final @NotNull Messages messages,
             final boolean retainedOnly
     ) {
-        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
+        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
 
         PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-                reversedPWRComparator
+                pWRComparator
         );
         messagePQ.addAll(messages.qos0Messages);
 
@@ -1059,7 +1059,7 @@ public class ClientQueueMemoryLocalPersistence
         while (
                 !messagePQ.isEmpty() &&
                         (
-                                reversedPWRComparator.compare(
+                                pWRComparator.compare(
                                         messagePQ.peek(),
                                         lowestPrioritizedMessage
                                 ) == 0
@@ -1080,10 +1080,10 @@ public class ClientQueueMemoryLocalPersistence
     PublishWithRetained getLowestPriorityMessage(
             final @NotNull Messages messages
     ) {
-        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
+        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
 
         PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-                reversedPWRComparator
+                pWRComparator
         );
         messagePQ.addAll(messages.qos0Messages);
 
@@ -1112,7 +1112,7 @@ public class ClientQueueMemoryLocalPersistence
         while (
                 !messagePQ.isEmpty() &&
                         (
-                                reversedPWRComparator.compare(
+                                pWRComparator.compare(
                                         messagePQ.peek(),
                                         lowestPrioritizedMessage
                                 ) ==
@@ -1136,10 +1136,10 @@ public class ClientQueueMemoryLocalPersistence
             final @NotNull Messages messages,
             final boolean retainedOnly
     ) {
-        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
+        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
 
         PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-                pWRComparator
+                reversedPWRComparator
         );
         messagePQ.addAll(messages.qos0Messages);
 
@@ -1171,7 +1171,7 @@ public class ClientQueueMemoryLocalPersistence
         while (
                 !messagePQ.isEmpty() &&
                         (
-                                pWRComparator.compare(
+                                reversedPWRComparator.compare(
                                         messagePQ.peek(),
                                         highestPrioritizedMessage
                                 ) == 0
@@ -1192,10 +1192,10 @@ public class ClientQueueMemoryLocalPersistence
     PublishWithRetained getHighestPriorityMessage(
             final @NotNull Messages messages
     ) {
-        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
+        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
 
         PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-                pWRComparator
+                reversedPWRComparator
         );
         messagePQ.addAll(messages.qos0Messages);
 
@@ -1224,7 +1224,7 @@ public class ClientQueueMemoryLocalPersistence
         while (
                 !messagePQ.isEmpty() &&
                         (
-                                pWRComparator.compare(
+                                reversedPWRComparator.compare(
                                         messagePQ.peek(),
                                         highestPrioritizedMessage
                                 ) ==
@@ -1242,6 +1242,43 @@ public class ClientQueueMemoryLocalPersistence
      * @return true if a message was discarded, else false
      */
     private boolean discardLowestPriority(
+            final @NotNull String queueId,
+            final boolean shared,
+            final @NotNull Messages messages,
+            final boolean retainedOnly
+    ) {
+        PublishWithRetained lowestPrioritizedMessage = getLowestPriorityMessage(
+                messages,
+                retainedOnly
+        );
+
+        if (lowestPrioritizedMessage == null) {
+            return false;
+        } else if (messages.qos0Messages.contains(lowestPrioritizedMessage)) {
+            logAndDecrementPayloadReference(
+                    lowestPrioritizedMessage,
+                    shared,
+                    queueId
+            );
+            messages.qos0Messages.remove(lowestPrioritizedMessage);
+            return true;
+        } else if (messages.qos1Or2Messages.contains(lowestPrioritizedMessage)) {
+            logAndDecrementPayloadReference(
+                    lowestPrioritizedMessage,
+                    shared,
+                    queueId
+            );
+            messages.qos1Or2Messages.remove(lowestPrioritizedMessage);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return true if a message was discarded, else false
+     */
+    private boolean discardHighestPriority(
             final @NotNull String queueId,
             final boolean shared,
             final @NotNull Messages messages,
@@ -1458,11 +1495,11 @@ public class ClientQueueMemoryLocalPersistence
         /**
          * Compares two PublishWithRetained's to decide which has lowest priority.
          *
-         * @param p1 as the first PublishWithRetained
-         * @param p2 as the second PublishWithRetained
-         * @return -1 if p1 has lowest priority,
-         * 0 if they are equal or
-         * 1 if p2 has lowest priority
+         * @param p1    as the first PublishWithRetained
+         * @param p2    as the second PublishWithRetained
+         * @return  -1 if p1 has lowest priority,
+         *          0 if they are equal or
+         *          1 if p2 has lowest priority
          */
         @Override
         public int compare(PublishWithRetained p1, PublishWithRetained p2) {

@@ -353,7 +353,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
     }
 
     @Test
-    public void test_get_lowest_priority() {
+    public void test_get_highest_priority() {
 
         TopicPriority[] tpList = new TopicPriority[6];
 
@@ -368,7 +368,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
 
 
-        assertEquals(publishes.get(0).getTopicPriority(), tpList[0]); // checks if lowest priority == 0;
+        assertEquals(publishes.get(0).getTopicPriority(), tpList[5]); // checks if the first element is the highest prioritized
 
     }
 
@@ -377,7 +377,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
         TopicPriority[] tpList = new TopicPriority[6];
 
-        for (int i = 0; i <= 5; i--) {
+        for (int i = 0; i <= 5; i++) {
             TopicPriority tp = new TopicPriority("topic/flash/" + i, PriorityClass.FLASH, i);
             tpList[i] = tp;
             persistence.add(
@@ -391,9 +391,9 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
         final ImmutableList<TopicPriority> TopicPriorities = publishes.stream().map(PUBLISH::getTopicPriority).collect(ImmutableList.toImmutableList());
         assertEquals(3, publishes.size());
-        assertTrue(TopicPriorities.contains(tpList[3])); // priority = 4
-        assertTrue(TopicPriorities.contains(tpList[4])); // priority = 5
-        assertTrue(TopicPriorities.contains(tpList[5])); // priority = 6
+        assertTrue(TopicPriorities.contains(tpList[3])); // priority = 3
+        assertTrue(TopicPriorities.contains(tpList[4])); // priority = 4
+        assertTrue(TopicPriorities.contains(tpList[5])); // priority = 5
         verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
     }
 
