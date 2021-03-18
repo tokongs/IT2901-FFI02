@@ -200,14 +200,14 @@ public class ClientQueueMemoryLocalPersistenceTest {
     public void test_readNew_qos0_and_qos1() {
         final PUBLISH[] qos0Publishes = new PUBLISH[3];
         for (int i = 0; i < qos0Publishes.length; i++) {
-            final PUBLISH publish = createPublish(0, QoS.AT_MOST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i));
+            final PUBLISH publish = createPublish(i, QoS.AT_MOST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i));
             qos0Publishes[i] = publish;
             persistence.add("client", false, publish, 100L, DISCARD, false, 0);
         }
 
         final PUBLISH[] qos1Publishes = new PUBLISH[3];
         for (int i = 0; i < qos1Publishes.length; i++) {
-            final PUBLISH publish = createPublish(1 + i, QoS.AT_LEAST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i));
+            final PUBLISH publish = createPublish(3 + i, QoS.AT_LEAST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i));
             qos1Publishes[i] = publish;
             persistence.add("client", false, publish, 100L, DISCARD, false, 0);
         }
