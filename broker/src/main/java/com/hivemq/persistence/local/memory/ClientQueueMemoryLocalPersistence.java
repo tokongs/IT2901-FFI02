@@ -423,6 +423,9 @@ public class ClientQueueMemoryLocalPersistence
                     publishes.add(0, publishWithRetained);
                     messageCount++;
                     bytes += publishWithRetained.getEstimatedSizeInMemory();
+                } else {
+                    discardPublishWithRetained(queueId, shared, messages, publishWithRetained);
+                    increaseMessagesMemory(-publishWithRetained.getEstimatedSize());
                 }
             } else if (
                     !messages.qos1Or2Messages.isEmpty() &&
