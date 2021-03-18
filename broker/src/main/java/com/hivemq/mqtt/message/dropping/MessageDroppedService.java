@@ -15,6 +15,8 @@
  */
 package com.hivemq.mqtt.message.dropping;
 
+import com.hivemq.extensions.priority.TopicPriority;
+
 /**
  * The MessageDroppedService is used to centralize the update of dropped message metrics. The corresponding method
  * should be called, whenever a message is dropped.
@@ -28,6 +30,10 @@ public interface MessageDroppedService {
      */
     void qos0MemoryExceeded(final String clientId, final String topic, final int qos, final long currentMemory, final long maxMemory);
 
+    /**
+     * Update the metrics if a qos 0 message was dropped because the queue for the client was not yet empty
+     */
+    void qos0MemoryExceeded(final String clientId, final TopicPriority topicPriority, final int qos, final long currentMemory, final long maxMemory);
     /**
      * Update the metrics if a message was dropped because the client message queue was full
      */

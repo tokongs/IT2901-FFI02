@@ -16,6 +16,7 @@
 package com.hivemq.mqtt.message.dropping;
 
 import com.hivemq.extension.sdk.api.annotations.NotNull;
+import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.logging.EventLog;
 import com.hivemq.metrics.MetricsHolder;
 
@@ -65,6 +66,15 @@ public class MessageDroppedServiceImpl implements MessageDroppedService {
         final String reason = "The QoS 0 memory limit exceeded, size: " + FORMAT.format(currentMemory) + " bytes, max: " + FORMAT.format(maxMemory) + " bytes";
 
         eventLog.messageDropped(clientId, topic, qos, reason);
+    }
+
+    @Override
+    public void qos0MemoryExceeded(final @NotNull String clientId, final @NotNull TopicPriority topicPriority, final int qos, final long currentMemory, final long maxMemory) {
+        metricsHolder.getDroppedMessageCounter().inc();
+
+        final String reason = "The QoS 0 memory limit exceeded, size: " + FORMAT.format(currentMemory) + " bytes, max: " + FORMAT.format(maxMemory) + " bytes";
+
+        eventLog.messageDropped(clientId, topicPriority.getTopicFilter(), qos, reason);
     }
 
     /**
