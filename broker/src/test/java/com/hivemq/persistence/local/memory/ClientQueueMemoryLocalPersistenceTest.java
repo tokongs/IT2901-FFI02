@@ -1306,38 +1306,18 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
     @Test
     public void test_read_new_highest_priority() {
-<<<<<<< HEAD
         //test_add_discard_lowest
         for (int i = 1; i <= 6; i++) {
             persistence.add(
                     "client", false, createPublish(i, QoS.AT_LEAST_ONCE, "topic/" + i), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
         }
-=======
-        persistence.add("client", false, createPublish(6, QoS.AT_LEAST_ONCE, "topic/" + 6), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(5, QoS.AT_LEAST_ONCE, "topic/" + 5), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(4, QoS.AT_LEAST_ONCE, "topic/" + 4), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(3, QoS.AT_LEAST_ONCE, "topic/" + 3), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(2, QoS.AT_LEAST_ONCE, "topic/" + 2), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, "topic/" + 1), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-
-
->>>>>>> 381f8566902599e0b8517da59850b8675c240f18
         final ImmutableList<PUBLISH> publishes =
                 persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
 
         final ImmutableList<String> Topics = publishes.stream().map(PUBLISH::getTopic).collect(ImmutableList.toImmutableList());
         assertEquals(6, publishes.size());
 
-<<<<<<< HEAD
-        assertEquals("topic/1", publishes.get(0).getTopic());
-        assertEquals("topic/2", publishes.get(1).getTopic());
-        assertEquals("topic/3", publishes.get(2).getTopic());
-        assertEquals("topic/4", publishes.get(3).getTopic());
-        assertEquals("topic/5", publishes.get(4).getTopic());
-        assertEquals("topic/6", publishes.get(5).getTopic());
-=======
         assertEquals("topic/1", Topics.get(0));
->>>>>>> 381f8566902599e0b8517da59850b8675c240f18
 
     }
 
