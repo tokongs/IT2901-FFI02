@@ -19,6 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import test.app.commands.Publish
+import test.app.commands.Subscribe
+import test.app.commands.Synthetic
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
@@ -27,104 +30,6 @@ import java.util.function.Consumer
 
 class Cli : CliktCommand() {
     override fun run() {
-    }
-}
-
-class Publish : CliktCommand(printHelpOnEmptyArgs = true, help = "Publish messages to MQTT") {
-    private val brokerAddress by option("-b", "--broker-address", help = "MQTT Broker address").default("127.0.0.1")
-    private val topic by option("-t", "--topic", help = "The topic to publish to").default("")
-    private val message by option("-m", "--message", help = "Message payload to send").default("")
-    private val qos by option("-q", "--qos", help = "Message qos").int().default(0)
-
-    override fun run() {
-        val client = Mqtt5Client.builder()
-            .identifier(UUID.randomUUID().toString())
-            .serverHost(brokerAddress)
-            .buildBlocking()
-
-        client.connect()
-        client.publishWith().topic(topic).payload(message.toByteArray())
-            .qos(MqttQos.fromCode(qos) ?: MqttQos.AT_MOST_ONCE).send()
-        client.disconnect()
-    }
-}
-
-class Synthetic : CliktCommand(printHelpOnEmptyArgs = true, help = "Put a syntethic load on the broker") {
-    private val brokerAddress by option("-b", "--broker-address", help = "MQTT Broker address").default("127.0.0.1")
-    private val topic: List<String> by option("-t", "--topic", help = "The topic to publish to. Can be specified multilple times").multiple()
-    private val numMessages by option("-n", "--num-messages", help = "Number of messages to send").int().default(100)
-    private val qos by option("-q", "--qos", help = "Message qos").int().default(0)
-
-    override fun run() = runBlocking {
-        echo("Initializing...")
-
-        var received = ConcurrentHashMap(topic.associateBy({it}, { mutableListOf<Pair<LocalDateTime, LocalDateTime>>()}))
-
-        var subscriber = Mqtt5Client.builder().identifier(UUID.randomUUID().toString())
-            .serverHost(brokerAddress).buildAsync()
-        subscriber.connect()
-        topic.forEach {
-            subscriber.subscribeWith()
-                .topicFilter("#")
-                .qos(MqttQos.fromCode(qos) ?: MqttQos.AT_MOST_ONCE)
-                .callback{message ->
-                    received[it]?.add(Pair(LocalDateTime.parse(String(message.payloadAsBytes)), LocalDateTime.now()!!))
-                }
-                .send()
-        }
-
-        echo("Sending messages...")
-
-        topic.map{ topic ->
-            launch(Dispatchers.Default) {
-                val publisher = Mqtt5Client.builder()
-                    .identifier(UUID.randomUUID().toString())
-                    .serverHost(brokerAddress)
-                    .buildBlocking()
-
-                publisher.connect()
-                repeat(numMessages) {
-                    publisher.publishWith().topic(topic).payload("${LocalDateTime.now()}".toByteArray())
-                        .qos(MqttQos.fromCode(qos) ?: MqttQos.AT_MOST_ONCE).send()
-                }
-                publisher.disconnect()
-            }
-        }.forEach{ it.join() }
-
-        echo("Analyzing...")
-        received.forEach { (topic, messages) ->
-                echo("Results for $topic:")
-                val sumDelay = messages.fold(Duration.ZERO) { acc, message ->
-                    acc + Duration.between(message.first, message.second)
-                }
-                val avgDelay = sumDelay.dividedBy(messages.size.toLong())
-                echo("Total delay for all messages combined: $sumDelay.")
-                echo("Average delay per message: $avgDelay.")
-
-        }
-    }
-}
-
-
-class Subscribe : CliktCommand(printHelpOnEmptyArgs = true, help = "Subscribe to MQTT topic filter") {
-    private val brokerAddress by option("-b", "--broker-address", help = "MQTT Broker address").default("127.0.0.1")
-    private val filter by option("-f", "--topic-filter", help = "The topic to publish to").default("#")
-    private val qos by option("-q", "--qos", help = "Message qos").int().default(0)
-
-    override fun run() {
-        val client = Mqtt5Client.builder()
-            .identifier(UUID.randomUUID().toString())
-            .serverHost(brokerAddress)
-            .buildAsync()
-
-        client.connect()
-        client.subscribeWith()
-            .topicFilter(filter)
-            .qos(MqttQos.fromCode(qos) ?: MqttQos.AT_MOST_ONCE)
-            .callback(Consumer {
-                println("${it.topic}: ${String(it.payloadAsBytes)}")
-            })
-            .send();
     }
 }
 
