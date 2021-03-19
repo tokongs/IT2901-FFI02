@@ -33,7 +33,7 @@ class Synthetic : CliktCommand(printHelpOnEmptyArgs = true, help = "Put a syntet
         // Setup subscriptions
         topic.forEach {
             subscriber.subscribeWith()
-                .topicFilter("#")
+                .topicFilter(it)
                 .qos(MqttQos.fromCode(qos) ?: MqttQos.AT_MOST_ONCE)
                 .callback{message ->
                     received[it]?.add(Pair(LocalDateTime.parse(String(message.payloadAsBytes)), LocalDateTime.now()!!))
