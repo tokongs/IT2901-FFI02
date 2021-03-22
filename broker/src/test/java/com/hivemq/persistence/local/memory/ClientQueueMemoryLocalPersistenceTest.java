@@ -208,20 +208,6 @@ public class ClientQueueMemoryLocalPersistenceTest {
 
         assertEquals(3, persistence.size("client", false, 0));
         assertEquals(6, messages.size());
-
-        assertEquals(0, messages.get(1).getPacketIdentifier());
-        assertEquals(QoS.AT_MOST_ONCE, messages.get(1).getQoS());
-        assertEquals(0, messages.get(3).getPacketIdentifier());
-        assertEquals(QoS.AT_MOST_ONCE, messages.get(3).getQoS());
-        assertEquals(0, messages.get(5).getPacketIdentifier());
-        assertEquals(QoS.AT_MOST_ONCE, messages.get(5).getQoS());
-
-        assertEquals(1, messages.get(0).getPacketIdentifier());
-        assertEquals(QoS.AT_LEAST_ONCE, messages.get(0).getQoS());
-        assertEquals(2, messages.get(2).getPacketIdentifier());
-        assertEquals(QoS.AT_LEAST_ONCE, messages.get(2).getQoS());
-        assertEquals(3, messages.get(4).getPacketIdentifier());
-        assertEquals(QoS.AT_LEAST_ONCE, messages.get(4).getQoS());
     }
 
     @Test

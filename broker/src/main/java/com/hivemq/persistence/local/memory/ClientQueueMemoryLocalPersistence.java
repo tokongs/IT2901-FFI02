@@ -396,7 +396,8 @@ public class ClientQueueMemoryLocalPersistence
             }
 
             if(publishWithRetained.getQoS() == QoS.AT_MOST_ONCE  && !PublishUtil.checkExpiry(publishWithRetained.getTimestamp(), publishWithRetained.getMessageExpiryInterval()) ){
-                    publishes.add(publishWithRetained);
+                messages.qos0Messages.poll();
+                publishes.add(publishWithRetained);
                     messageCount++;
                     bytes += publishWithRetained.getEstimatedSizeInMemory();
                     continue;
