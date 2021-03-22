@@ -11,9 +11,14 @@
 
     <priorities>
         <priority>
-            <filter>testtopic/#</filter>
+            <filter>flash/#</filter>
             <priority>100</priority>
             <priority-class>FLASH</priority-class>
+        </priority>
+        <priority>
+            <filter>immediate/#</filter>
+            <priority>100</priority>
+            <priority-class>IMMEDIATE</priority-class>
         </priority>
     </priorities>
 </hivemq>

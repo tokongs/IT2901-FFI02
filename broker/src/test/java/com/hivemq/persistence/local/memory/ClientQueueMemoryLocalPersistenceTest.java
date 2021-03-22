@@ -39,6 +39,7 @@ import com.hivemq.persistence.local.memory.ClientQueueMemoryLocalPersistence.Pub
 import com.hivemq.persistence.local.xodus.bucket.BucketUtils;
 import com.hivemq.persistence.payload.PublishPayloadPersistence;
 import com.hivemq.util.ObjectMemoryEstimation;
+import com.hivemq.util.PublishComparator;
 import com.hivemq.util.Topics;
 
 import org.apache.commons.lang3.RandomStringUtils;
@@ -77,6 +78,9 @@ public class ClientQueueMemoryLocalPersistenceTest {
     @Mock
     private MessageDroppedService messageDroppedService;
 
+    @Mock
+    private PublishComparator publishComparator;
+
     private ClientQueueMemoryLocalPersistence persistence;
 
     private final int bucketCount = 4;
@@ -96,7 +100,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         metricRegistry = new MetricRegistry();
         persistence = new ClientQueueMemoryLocalPersistence(
                 payloadPersistence,
-                messageDroppedService, metricRegistry);
+                messageDroppedService, metricRegistry, publishComparator);
 
         List<TopicPriority> priorities = new ArrayList<TopicPriority>();
     }
@@ -352,50 +356,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
     }
 
-    @Test
-    public void test_get_highest_priority() {
 
-        TopicPriority[] tpList = new TopicPriority[6];
-
-        for (int i = 0; i <= 5; i++) {
-            TopicPriority tp = new TopicPriority("topic/flash/" + i, PriorityClass.FLASH, i);
-            tpList[i] = tp;
-            persistence.add(
-                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, tp), 6L, DISCARD_LOWEST_PRIORITY, false, 0);
-        }
-
-        final ImmutableList<PUBLISH> publishes =
-                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
-
-
-        assertEquals(publishes.get(5).getTopicPriority(), tpList[5]); // checks if the first element is the highest prioritized
-
-    }
-
-    @Test
-    public void test_add_discard_lowest_priority() {
-
-        TopicPriority[] tpList = new TopicPriority[6];
-
-        for (int i = 0; i <= 5; i++) {
-            TopicPriority tp = new TopicPriority("topic/flash/" + i, PriorityClass.FLASH, i);
-            tpList[i] = tp;
-            persistence.add(
-                    "client", false, createPublish(i, QoS.AT_LEAST_ONCE, tp), 3L, DISCARD_LOWEST_PRIORITY, false, 0);
-        }
-
-        assertEquals(3, persistence.size("client", false, 0));
-
-        final ImmutableList<PUBLISH> publishes =
-                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6), byteLimit, 0);
-
-        final ImmutableList<TopicPriority> TopicPriorities = publishes.stream().map(PUBLISH::getTopicPriority).collect(ImmutableList.toImmutableList());
-        assertEquals(3, publishes.size());
-        assertTrue(TopicPriorities.contains(tpList[3])); // priority = 3
-        assertTrue(TopicPriorities.contains(tpList[4])); // priority = 4
-        assertTrue(TopicPriorities.contains(tpList[5])); // priority = 5
-        verify(messageDroppedService, times(3)).queueFull(eq("client"), anyString(), anyInt());
-    }
 
     @Test
     public void test_clear() {
@@ -841,12 +802,12 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals(2, notSharedMessages.size());
         assertEquals(2, sharedMessages.size());
 
-        assertEquals("topic/not_shared/1", notSharedMessages.get(0).getTopicPriority().getTopicFilter());
+        assertEquals("topic/not_shared/1", notSharedMessages.get(0).getTopic());
 
-        assertEquals("topic/not_shared/1", notSharedMessages.get(1).getTopicPriority().getTopicFilter());
+        assertEquals("topic/not_shared/1", notSharedMessages.get(1).getTopic());
 
-        assertEquals("topic/shared/1", sharedMessages.get(0).getTopicPriority().getTopicFilter());
-        assertEquals("topic/shared/1", sharedMessages.get(1).getTopicPriority().getTopicFilter());
+        assertEquals("topic/shared/1", sharedMessages.get(0).getTopic());
+        assertEquals("topic/shared/1", sharedMessages.get(1).getTopic());
 
         assertEquals(1, persistence.size("id", false, 0));
         assertEquals(1, persistence.size("id", true, 0));
@@ -998,33 +959,6 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals("topic/4", all.get(1).getTopic());
         assertEquals(new TopicPriority("topic/try/5", PriorityClass.ROUTINE, 4), all.get(2).getTopic());
     }*/
-
-    @Test
-    public void test_batched_add_discard_lowest_priority() {
-        final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
-
-        TopicPriority tp1 = new TopicPriority("topic/start/1", PriorityClass.FLASH, 1);
-
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, tp1), 3, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, tp1), 3, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, tp1), 3, DISCARD_LOWEST_PRIORITY, false, 0);
-
-
-        for (int i = 0; i < 3; i++) {
-            publishes.add(createPublish(1, QoS.AT_LEAST_ONCE, new TopicPriority("topic/try/" + i, PriorityClass.FLASH, i)));
-        }
-        persistence.add("client", false, publishes.build(), 3, DISCARD_LOWEST_PRIORITY, false, 0);
-
-        assertEquals(3, persistence.size("client", false, 0));
-
-        final ImmutableList<PUBLISH> all =
-                persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 10000L, 0);
-
-        assertEquals(3, all.size());
-        assertEquals(0, all.get(0).getTopicPriority().getPriority());
-        assertEquals(1, all.get(1).getTopicPriority().getPriority());
-        assertEquals(1, all.get(2).getTopicPriority().getPriority());
-    }
 
     @Test
     public void test_batched_add_larger_than_queue_discard_lowest_priority() {
@@ -1209,7 +1143,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         metricRegistry = new MetricRegistry();
         persistence = new ClientQueueMemoryLocalPersistence(
                 payloadPersistence,
-                messageDroppedService, metricRegistry);
+                messageDroppedService, metricRegistry, publishComparator);
 
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
         int totalPublishBytes = 0;
@@ -1242,7 +1176,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         metricRegistry = new MetricRegistry();
         persistence = new ClientQueueMemoryLocalPersistence(
                 payloadPersistence,
-                messageDroppedService, metricRegistry);
+                messageDroppedService, metricRegistry, publishComparator);
 
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
         int totalPublishBytes = 0;
@@ -1285,7 +1219,7 @@ public class ClientQueueMemoryLocalPersistenceTest {
         metricRegistry = new MetricRegistry();
         persistence = new ClientQueueMemoryLocalPersistence(
                 payloadPersistence,
-                messageDroppedService, metricRegistry);
+                messageDroppedService, metricRegistry, publishComparator);
 
         final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
         int totalPublishBytes = 0;
@@ -1357,65 +1291,6 @@ public class ClientQueueMemoryLocalPersistenceTest {
         assertEquals("topic/try/1", Topics.get(0));
 
     }
-
-    /*
-     * test_publish_with_retained_time_comparator
-     * test_publish_with_retained_comparator
-     * test_reversed_publish_with_retained_comparator
-     * test_get_topic_priority
-     * */
-
-    @Test
-    public void test_get_topic_priority() {
-        persistence.add("client", false, createPublish(1, QoS.AT_LEAST_ONCE, new TopicPriority("topic/routine/1", PriorityClass.ROUTINE, 1)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(3, QoS.AT_LEAST_ONCE, new TopicPriority("topic/priority/2", PriorityClass.PRIORITY, 2)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(4, QoS.AT_LEAST_ONCE, new TopicPriority("topic/immediate/3", PriorityClass.IMMEDIATE, 3)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
-        persistence.add("client", false, createPublish(5, QoS.AT_LEAST_ONCE, new TopicPriority("topic/flash/4", PriorityClass.FLASH, 4)), 5L, DISCARD_LOWEST_PRIORITY, false, 0);
-
-        final ImmutableList<PUBLISH> publishes = persistence.readNew("client", false, ImmutableIntArray.of(1, 2, 3, 4), byteLimit, 0);
-
-        final ImmutableList<PriorityClass> PriorityClasses = publishes.stream().map(PUBLISH::getTopicPriority).map(TopicPriority::getPriorityClass).collect(ImmutableList.toImmutableList());
-        final ImmutableList<Integer> Priorities = publishes.stream().map(PUBLISH::getTopicPriority).map(TopicPriority::getPriority).collect(ImmutableList.toImmutableList());
-
-        assertEquals(4, PriorityClasses.size());
-        assertEquals(4, Priorities.size());
-
-        assertTrue(PriorityClasses.contains(PriorityClass.ROUTINE));
-        assertTrue(PriorityClasses.contains(PriorityClass.PRIORITY));
-        assertTrue(PriorityClasses.contains(PriorityClass.IMMEDIATE));
-        assertTrue(PriorityClasses.contains(PriorityClass.FLASH));
-
-        assertTrue(Priorities.contains(1));
-        assertTrue(Priorities.contains(2));
-        assertTrue(Priorities.contains(3));
-        assertTrue(Priorities.contains(4));
-    }
-
-
-    @Test
-    public void test_reversed_publish_with_retained_comparator() {
-        TopicPriority topicPriorityFLASH100 = new TopicPriority("topic/flash/100", PriorityClass.FLASH, 100);
-        TopicPriority topicPriorityFLASH99 = new TopicPriority("topic/flash/99", PriorityClass.FLASH, 99);
-        TopicPriority topicPriorityROUTINE0 = new TopicPriority("topic/routine/0", PriorityClass.ROUTINE, 0);
-        TopicPriority topicPriorityPRIORITY0 = new TopicPriority("topic/routine/0", PriorityClass.PRIORITY, 0);
-
-        PublishWithRetained pwrFlash100 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityFLASH100), false);
-        PublishWithRetained pwrFlash100_2 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityFLASH100), false);
-
-        PublishWithRetained pwrFlash99 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityFLASH99), false);
-        PublishWithRetained pwrRoutine0 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityROUTINE0), false);
-        PublishWithRetained pwrPriority0 = new PublishWithRetained(createPublish(1, QoS.AT_LEAST_ONCE, topicPriorityPRIORITY0), false);
-
-
-        ClientQueueMemoryLocalPersistence.ReversedPublishWithRetainedComparator rPWRC = new ClientQueueMemoryLocalPersistence.ReversedPublishWithRetainedComparator();
-
-        assertEquals(0, rPWRC.compare(pwrFlash100, pwrFlash100_2));  // same class           same priority
-        assertEquals(1, rPWRC.compare(pwrFlash99, pwrFlash100));     // same class           p1 has lower priority
-        assertEquals(1, rPWRC.compare(pwrPriority0, pwrRoutine0));   // p1 has lower class   same priority
-        assertEquals(1, rPWRC.compare(pwrFlash100, pwrRoutine0));    // p1 has lower class   p2 has lower priority
-
-    }
-
 
     private ImmutableIntArray createPacketIds(final int start, final int size) {
         final ImmutableIntArray.Builder builder = ImmutableIntArray.builder();

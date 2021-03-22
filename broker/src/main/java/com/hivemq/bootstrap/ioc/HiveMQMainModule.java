@@ -18,6 +18,7 @@ package com.hivemq.bootstrap.ioc;
 
 import com.hivemq.mqtt.topic.TokenizedTopicMatcher;
 import com.hivemq.mqtt.topic.TopicMatcher;
+import com.hivemq.util.PublishComparator;
 
 /**
  * @author Dominik Obermaier
@@ -32,5 +33,6 @@ public class HiveMQMainModule extends SingletonModule {
     @Override
     protected void configure() {
         bind(TopicMatcher.class).to(TokenizedTopicMatcher.class);
+
     }
 }

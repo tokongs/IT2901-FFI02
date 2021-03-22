@@ -51,11 +51,6 @@ public interface Mqtt3PUBLISH extends Message {
     String getTopic();
 
     /**
-     * @return the topicPriority of the publish message
-     */
-    TopicPriority getTopicPriority();
-
-    /**
      * @return the duplicate delivery flag of the publish message
      */
     boolean isDuplicateDelivery();

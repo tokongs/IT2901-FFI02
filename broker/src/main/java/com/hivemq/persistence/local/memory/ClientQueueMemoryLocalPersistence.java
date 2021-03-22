@@ -15,13 +15,8 @@
  */
 package com.hivemq.persistence.local.memory;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.hivemq.configuration.service.InternalConfigurations.QOS_0_MEMORY_HARD_LIMIT_DIVISOR;
-import static com.hivemq.util.ThreadPreConditions.SINGLE_WRITER_THREAD_PREFIX;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.ImmutableIntArray;
@@ -31,31 +26,26 @@ import com.hivemq.configuration.service.InternalConfigurations;
 import com.hivemq.configuration.service.MqttConfigurationService.QueuedMessagesStrategy;
 import com.hivemq.extension.sdk.api.annotations.NotNull;
 import com.hivemq.extension.sdk.api.annotations.Nullable;
-import com.hivemq.extension.sdk.api.services.publish.Publish;
-import com.hivemq.extensions.priority.PriorityClass;
-import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.metrics.HiveMQMetrics;
-import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.MessageWithID;
 import com.hivemq.mqtt.message.QoS;
 import com.hivemq.mqtt.message.dropping.MessageDroppedService;
 import com.hivemq.mqtt.message.publish.PUBLISH;
 import com.hivemq.mqtt.message.pubrel.PUBREL;
-import com.hivemq.mqtt.message.subscribe.Topic;
 import com.hivemq.persistence.clientqueue.ClientQueueLocalPersistence;
 import com.hivemq.persistence.payload.PublishPayloadPersistence;
-import com.hivemq.util.ObjectMemoryEstimation;
-import com.hivemq.util.PublishUtil;
-import com.hivemq.util.Strings;
-import com.hivemq.util.ThreadPreConditions;
+import com.hivemq.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.hivemq.configuration.service.InternalConfigurations.QOS_0_MEMORY_HARD_LIMIT_DIVISOR;
+import static com.hivemq.util.ThreadPreConditions.SINGLE_WRITER_THREAD_PREFIX;
 
 /**
  * @author Florian Limpöck
@@ -81,14 +71,16 @@ public class ClientQueueMemoryLocalPersistence
     static class Messages {
 
         @NotNull
-        final PriorityQueue<MessageWithID> qos1Or2Messages = new PriorityQueue<>(
-                new MessageWithIDComparator()
-        );
+        final PriorityQueue<MessageWithID> qos1Or2Messages;
 
         @NotNull
-        final PriorityQueue<PublishWithRetained> qos0Messages = new PriorityQueue<>(
-                new PublishWithRetainedComparator()
-        );
+        final PriorityQueue<PublishWithRetained> qos0Messages;
+
+        public Messages(Comparator<PUBLISH> comparator) {
+            qos1Or2Messages = new PriorityQueue(comparator);
+            qos0Messages = new PriorityQueue(comparator);
+        }
+
 
         int retainedQos1Or2Messages = 0;
         long qos0Memory = 0;
@@ -110,11 +102,15 @@ public class ClientQueueMemoryLocalPersistence
     @NotNull
     private final AtomicLong totalMemorySize;
 
+    @NotNull
+    private final PublishComparator publishComparator;
+
     @Inject
     ClientQueueMemoryLocalPersistence(
             final @NotNull PublishPayloadPersistence payloadPersistence,
             final @NotNull MessageDroppedService messageDroppedService,
-            final @NotNull MetricRegistry metricRegistry
+            final @NotNull MetricRegistry metricRegistry,
+            final @NotNull PublishComparator publishComparator
     ) {
         final int bucketCount = InternalConfigurations.PERSISTENCE_BUCKET_COUNT.get();
         // noinspection unchecked
@@ -125,6 +121,7 @@ public class ClientQueueMemoryLocalPersistence
             buckets[i] = new HashMap<>();
             sharedBuckets[i] = new HashMap<>();
         }
+        this.publishComparator = publishComparator;
 
         this.payloadPersistence = payloadPersistence;
         this.messageDroppedService = messageDroppedService;
@@ -205,98 +202,44 @@ public class ClientQueueMemoryLocalPersistence
             final long max,
             final @NotNull QueuedMessagesStrategy strategy,
             final boolean retained,
-            final int bucketIndex
-    ) {
+            final int bucketIndex) {
+
         checkNotNull(queueId, "Queue ID must not be null");
         checkNotNull(publishes, "Publishes must not be null");
         checkNotNull(strategy, "Strategy must not be null");
         ThreadPreConditions.startsWith(SINGLE_WRITER_THREAD_PREFIX);
 
-        final Map<String, Messages> bucket = shared
-                ? sharedBuckets[bucketIndex]
-                : buckets[bucketIndex];
-        final Messages messages = bucket.computeIfAbsent(
-                queueId,
-                s -> new Messages()
-        );
+        final Map<String, Messages> bucket = shared ? sharedBuckets[bucketIndex] : buckets[bucketIndex];
+        final Messages messages = bucket.computeIfAbsent(queueId, s -> new Messages(publishComparator));
 
         for (final PUBLISH publish : publishes) {
-            final PublishWithRetained publishWithRetained = new PublishWithRetained(
-                    publish,
-                    retained
-            );
+            final PublishWithRetained publishWithRetained = new PublishWithRetained(publish, retained);
             if (publish.getQoS() == QoS.AT_MOST_ONCE) {
                 addQos0Publish(queueId, shared, messages, publishWithRetained);
             } else {
-                PublishWithRetainedComparator pwrC = new PublishWithRetainedComparator();
-
-                final int qos1And2QueueSize =
-                        messages.qos1Or2Messages.size() - messages.retainedQos1Or2Messages;
+                final int qos1And2QueueSize = messages.qos1Or2Messages.size() - messages.retainedQos1Or2Messages;
                 if ((qos1And2QueueSize >= max) && !retained) {
                     if (strategy == QueuedMessagesStrategy.DISCARD) {
                         logAndDecrementPayloadReference(publish, shared, queueId);
                         continue;
                     } else {
-                        PublishWithRetained pwr = new PublishWithRetained(publish, false);
-
-
-                        int result = pwrC.compare(
-                                pwr,
-                                Objects.requireNonNull(getHighestPriorityMessage(messages, false))
-                        );
-                        switch (result) {
-                            case 1: // publish is lower prioritized
-                                logAndDecrementPayloadReference(publish, shared, queueId);
-                                continue;
-                            case -1: // publish is higher prioritized
-                            case 0: // publish is equally prioritized
-                                final boolean discarded = discardLowestPriority(
-                                        queueId,
-                                        shared,
-                                        messages,
-                                        false
-                                );
-                                if (!discarded) {
-                                    // then something horrible has happened,
-                                    throw new IllegalStateException(
-                                            "A message has been found, " +
-                                                    "but later the same message cannot be found."
-                                    );
-                                }
+                        final boolean discarded = discardOldest(queueId, shared, messages, false);
+                        if (!discarded) {
+                            //discard this message if no old could be discarded
+                            logAndDecrementPayloadReference(publish, shared, queueId);
+                            continue;
                         }
                     }
-                } else if (
-                        (messages.retainedQos1Or2Messages >= retainedMessageMax) && retained
-                ) {
+                } else if ((messages.retainedQos1Or2Messages >= retainedMessageMax) && retained) {
                     if (strategy == QueuedMessagesStrategy.DISCARD) {
                         logAndDecrementPayloadReference(publish, shared, queueId);
                         continue;
                     } else {
-                        PublishWithRetained pwr = new PublishWithRetained(publish, true);
-
-                        int result = pwrC.compare(
-                                pwr,
-                                Objects.requireNonNull(getHighestPriorityMessage(messages, false))
-                        );
-                        switch (result) {
-                            case 1: // publish is lower prioritized
-                                logAndDecrementPayloadReference(publish, shared, queueId);
-                                continue;
-                            case -1: // publish is higher prioritized
-                            case 0: // publish is equally prioritized
-                                final boolean discarded = discardLowestPriority(
-                                        queueId,
-                                        shared,
-                                        messages,
-                                        true
-                                );
-                                if (!discarded) {
-                                    // then something horrible has happened,
-                                    throw new IllegalStateException(
-                                            "A message has been found, " +
-                                                    "but later the same message cannot be found."
-                                    );
-                                }
+                        final boolean discarded = discardOldest(queueId, shared, messages, true);
+                        if (!discarded) {
+                            //discard this message if no old could be discarded
+                            logAndDecrementPayloadReference(publish, shared, queueId);
+                            continue;
                         }
                     }
                 } else {
@@ -311,6 +254,40 @@ public class ClientQueueMemoryLocalPersistence
             }
         }
     }
+
+    /**
+     * @return true if a message was discarded, else false
+     */
+    private boolean discardOldest(
+            final @NotNull String queueId,
+            final boolean shared,
+            final @NotNull Messages messages,
+            final boolean retainedOnly) {
+
+        final Iterator<MessageWithID> iterator = messages.qos1Or2Messages.iterator();
+        while (iterator.hasNext()) {
+            final MessageWithID messageWithID = iterator.next();
+            if (!(messageWithID instanceof PublishWithRetained)) {
+                continue;
+            }
+            final PublishWithRetained publish = (PublishWithRetained) messageWithID;
+            // we must no discard inflight messages
+            if (publish.getPacketIdentifier() != NO_PACKET_ID) {
+                continue;
+            }
+            // Messages that are queued as retained messages are not discarded,
+            // otherwise a client could only receive a limited amount of retained messages per subscription.
+            if ((retainedOnly && !publish.retained) || (!retainedOnly && publish.retained)) {
+                continue;
+            }
+            logAndDecrementPayloadReference(publish, shared, queueId);
+            iterator.remove();
+            return true;
+        }
+        return false;
+
+    }
+
 
     private void addQos0Publish(
             final @NotNull String queueId,
@@ -400,71 +377,56 @@ public class ClientQueueMemoryLocalPersistence
         int messageCount = 0;
         int packetIdIndex = 0;
         int bytes = 0;
-        List<PUBLISH> publishes = new ArrayList<PUBLISH>();
+        final ImmutableList.Builder<PUBLISH> publishes = ImmutableList.builder();
 
-        while ((messageCount < countLimit) && (bytes < bytesLimit)) {
-            PublishWithRetained publishWithRetained = getHighestPriorityMessage(
-                    messages
-            );
+        PriorityQueue<PublishWithRetained> allPublishes = new PriorityQueue(publishComparator);
+        allPublishes.addAll(messages.qos0Messages);
+        allPublishes.addAll(messages.qos1Or2Messages
+                .stream()
+                .filter(m -> m instanceof PublishWithRetained)
+                .map(m -> (PublishWithRetained) m)
+                .collect(Collectors.toList()));
 
-            if (publishWithRetained == null) {
-                break;
-            } else if (
-                    !messages.qos0Messages.isEmpty() &&
-                            messages.qos0Messages.contains(publishWithRetained)
-            ) {
-                if (
-                        (publishWithRetained != null) &&
-                                !PublishUtil.checkExpiry(
-                                        publishWithRetained.getTimestamp(),
-                                        publishWithRetained.getMessageExpiryInterval()
-                                )
-                ) {
+        while (!allPublishes.isEmpty()) {
+            final PublishWithRetained publishWithRetained = allPublishes.peek();
+
+            if (publishWithRetained.getPacketIdentifier() != NO_PACKET_ID) {
+                //already inflight
+                continue;
+            }
+
+            if(publishWithRetained.getQoS() == QoS.AT_MOST_ONCE  && !PublishUtil.checkExpiry(publishWithRetained.getTimestamp(), publishWithRetained.getMessageExpiryInterval()) ){
+
                     publishes.add(publishWithRetained);
-                    discardPublishWithRetained(queueId, shared, messages, publishWithRetained);
                     messageCount++;
                     bytes += publishWithRetained.getEstimatedSizeInMemory();
-                } else {
-                    discardPublishWithRetained(queueId, shared, messages, publishWithRetained);
-                    increaseMessagesMemory(-publishWithRetained.getEstimatedSize());
+            }
+
+            if (PublishUtil.checkExpiry(publishWithRetained.getTimestamp(), publishWithRetained.getMessageExpiryInterval())) {
+                allPublishes.poll();
+                payloadPersistence.decrementReferenceCounter(publishWithRetained.getPublishId());
+                if (publishWithRetained.retained) {
+                    messages.retainedQos1Or2Messages--;
                 }
-            } else if (
-                    !messages.qos1Or2Messages.isEmpty() &&
-                            messages.qos1Or2Messages.contains(publishWithRetained)
-            ) {
-                if (
-                        PublishUtil.checkExpiry(
-                                publishWithRetained.getTimestamp(),
-                                publishWithRetained.getMessageExpiryInterval()
-                        )
-                ) {
-                    messages.qos1Or2Messages.remove(publishWithRetained);
-                    payloadPersistence.decrementReferenceCounter(
-                            publishWithRetained.getPublishId()
-                    );
-                    if (publishWithRetained.retained) {
-                        messages.retainedQos1Or2Messages--;
-                    }
-                    increaseMessagesMemory(-publishWithRetained.getEstimatedSize());
-                } else {
-                    final int packetId = packetIds.get(packetIdIndex);
-                    publishWithRetained.setPacketIdentifier(packetId);
-                    publishes.add(publishWithRetained);
-                    packetIdIndex++;
-                    messageCount++;
-                    bytes += publishWithRetained.getEstimatedSizeInMemory();
-                }
+                increaseMessagesMemory(-publishWithRetained.getEstimatedSize());
             } else {
-                throw new IllegalStateException(
-                        "A message was found but qos0 and qos1Or2 is empty, messageID:" +
-                                publishWithRetained.getUniqueId()
-                );
+
+                final int packetId = packetIds.get(packetIdIndex);
+                publishWithRetained.setPacketIdentifier(packetId);
+                publishes.add(publishWithRetained);
+                packetIdIndex++;
+                messageCount++;
+                bytes += publishWithRetained.getEstimatedSizeInMemory();
+                if ((messageCount == countLimit) || (bytes > bytesLimit)) {
+                    break;
+                }
+            }
+
+            if ((messageCount == countLimit) || (bytes > bytesLimit)) {
+                break;
             }
         }
-
-        final ImmutableList.Builder<PUBLISH> publishesSorted = ImmutableList.builder();
-        publishesSorted.addAll(publishes);
-        return publishesSorted.build();
+        return publishes.build();
     }
 
     private @NotNull ImmutableList<PUBLISH> getQos0Publishes(
@@ -980,276 +942,13 @@ public class ClientQueueMemoryLocalPersistence
         }
     }
 
-    /**
-     * TODO: Remove if necessary, might not need. Currently unused.
-     *
-     * @return true if a message was discarded, else false
-     */
-    private boolean discardOldest(
-            final @NotNull String queueId,
-            final boolean shared,
-            final @NotNull Messages messages,
-            final boolean retainedOnly
-    ) {
-        final Iterator<MessageWithID> iterator = messages.qos1Or2Messages.iterator();
-        while (iterator.hasNext()) {
-            final MessageWithID messageWithID = iterator.next();
-            if (!(messageWithID instanceof PublishWithRetained)) {
-                continue;
-            }
-            final PublishWithRetained publish = (PublishWithRetained) messageWithID;
-            // we must no discard inflight messages
-            if (publish.getPacketIdentifier() != NO_PACKET_ID) {
-                continue;
-            }
-            // Messages that are queued as retained messages are not discarded,
-            // otherwise a client could only receive a limited amount of retained messages
-            // per subscription.
-            if (
-                    (retainedOnly && !publish.retained) ||
-                            (!retainedOnly && publish.retained)
-            ) {
-                continue;
-            }
-            logAndDecrementPayloadReference(publish, shared, queueId);
-            iterator.remove();
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Gets the lowest priority message among messages.
-     *
-     * @param messages     the messages to search amongst
-     * @param retainedOnly something about subscribe
-     * @return the lowest priority message
-     */
-    private PublishWithRetained getLowestPriorityMessage(
-            final @NotNull Messages messages,
-            final boolean retainedOnly
-    ) {
-        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
-
-        PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-            reversedPWRComparator
-        );
-        messagePQ.addAll(messages.qos0Messages);
-
-        messagePQ.addAll(
-                messages.qos1Or2Messages
-                        .stream()
-                        .filter(m -> m instanceof PublishWithRetained)
-                        .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
-                        .map(m -> (PublishWithRetained) m)
-                        .filter(
-                                m -> !((retainedOnly && !m.retained) || (!retainedOnly && m.retained))
-                        )
-                        .collect(Collectors.toList())
-        );
-
-        PublishWithRetained lowestPrioritizedMessage = messagePQ.poll();
-
-        if (lowestPrioritizedMessage == null) {
-            return null;
-        } else if (messagePQ.peek() == null) {
-            return lowestPrioritizedMessage;
-        }
-
-        PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(
-                new PublishWithRetainedTimeComparator()
-        );
-        timeMessages.add(lowestPrioritizedMessage);
-
-        while (
-                !messagePQ.isEmpty() &&
-                        (
-                            reversedPWRComparator.compare(
-                                        messagePQ.peek(),
-                                        lowestPrioritizedMessage
-                                ) == 0
-                        )
-        ) {
-            timeMessages.add(messagePQ.poll());
-        }
-
-        return timeMessages.peek();
-    }
-
-    /**
-     * Gets the lowest priority message among messages.
-     *
-     * @param messages the messages to search amongst
-     * @return the lowest priority message
-     */
-    PublishWithRetained getLowestPriorityMessage(
-            final @NotNull Messages messages
-    ) {
-        ReversedPublishWithRetainedComparator reversedPWRComparator = new ReversedPublishWithRetainedComparator();
-
-        PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-            reversedPWRComparator
-        );
-        messagePQ.addAll(messages.qos0Messages);
-
-        messagePQ.addAll(
-                messages.qos1Or2Messages
-                        .stream()
-                        .filter(m -> m instanceof PublishWithRetained)
-                        .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
-                        .map(m -> (PublishWithRetained) m)
-                        .collect(Collectors.toList())
-        );
-
-        PublishWithRetained lowestPrioritizedMessage = messagePQ.poll();
-
-        if (lowestPrioritizedMessage == null) {
-            return null;
-        } else if (messagePQ.peek() == null) {
-            return lowestPrioritizedMessage;
-        }
-
-        PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(
-                new PublishWithRetainedTimeComparator()
-        );
-        timeMessages.add(lowestPrioritizedMessage);
-
-        while (
-                !messagePQ.isEmpty() &&
-                        (
-                            reversedPWRComparator.compare(
-                                        messagePQ.peek(),
-                                        lowestPrioritizedMessage
-                                ) ==
-                                        0
-                        )
-        ) {
-            timeMessages.add(messagePQ.poll());
-        }
-
-        return timeMessages.peek();
-    }
-
-    /**
-     * Gets the highgest priority message among messages.
-     *
-     * @param messages     the messages to search a  }mongst
-     * @param retainedOnly something about subscribe
-     * @return the highest priority message
-     */
-    private PublishWithRetained getHighestPriorityMessage(
-            final @NotNull Messages messages,
-            final boolean retainedOnly
-    ) {
-        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
-
-        PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-                pWRComparator
-        );
-        messagePQ.addAll(messages.qos0Messages);
-
-        messagePQ.addAll(
-                messages.qos1Or2Messages
-                        .stream()
-                        .filter(m -> m instanceof PublishWithRetained)
-                        .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
-                        .map(m -> (PublishWithRetained) m)
-                        .filter(
-                                m -> !((retainedOnly && !m.retained) || (!retainedOnly && m.retained))
-                        )
-                        .collect(Collectors.toList())
-        );
-
-        PublishWithRetained highestPrioritizedMessage = messagePQ.poll();
-
-        if (highestPrioritizedMessage == null) {
-            return null;
-        } else if (messagePQ.peek() == null) {
-            return highestPrioritizedMessage;
-        }
-
-        PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(
-                new PublishWithRetainedTimeComparator()
-        );
-        timeMessages.add(highestPrioritizedMessage);
-
-        while (
-                !messagePQ.isEmpty() &&
-                        (
-                            pWRComparator.compare(
-                                        messagePQ.peek(),
-                                        highestPrioritizedMessage
-                                ) == 0
-                        )
-        ) {
-            timeMessages.add(messagePQ.poll());
-        }
-
-        return timeMessages.peek();
-    }
-
-    /**
-     * Gets the highest priority message among messages.
-     *
-     * @param messages the messages to search amongst
-     * @return the highest priority message
-     */
-    PublishWithRetained getHighestPriorityMessage(
-            final @NotNull Messages messages
-    ) {
-        PublishWithRetainedComparator pWRComparator = new PublishWithRetainedComparator();
-
-        PriorityQueue<PublishWithRetained> messagePQ = new PriorityQueue(
-                pWRComparator
-        );
-        messagePQ.addAll(messages.qos0Messages);
-
-        messagePQ.addAll(
-                messages.qos1Or2Messages
-                        .stream()
-                        .filter(m -> m instanceof PublishWithRetained)
-                        .filter(m -> m.getPacketIdentifier() == NO_PACKET_ID)
-                        .map(m -> (PublishWithRetained) m)
-                        .collect(Collectors.toList())
-        );
-
-        PublishWithRetained highestPrioritizedMessage = messagePQ.poll();
-
-        if (highestPrioritizedMessage == null) {
-            return null;
-        } else if (messagePQ.peek() == null) {
-            return highestPrioritizedMessage;
-        }
-
-        PriorityQueue<PublishWithRetained> timeMessages = new PriorityQueue<>(
-                new PublishWithRetainedTimeComparator()
-        );
-        timeMessages.add(highestPrioritizedMessage);
-
-        while (
-                !messagePQ.isEmpty() &&
-                        (
-                                pWRComparator.compare(
-                                        messagePQ.peek(),
-                                        highestPrioritizedMessage
-                                ) ==
-                                        0
-                        )
-        ) {
-            timeMessages.add(messagePQ.poll());
-        }
-
-        return timeMessages.peek();
-    }
-
 
     /**
      * Discards the message if it exists.
      *
-     * @param queueId       queueId
-     * @param shared        if the topic is shared
-     * @param messages      all the messages
-     * @param pwr           the message to discard
+     * @param queueId  queueId
+     * @param shared   if the topic is shared
+     * @param messages all the messages
      * @return true if a message was discarded, else false
      */
     private boolean discardPublishWithRetained(
@@ -1280,50 +979,6 @@ public class ClientQueueMemoryLocalPersistence
             }
             increaseMessagesMemory(-getMessageSize(publishWithRetained));
             messages.qos1Or2Messages.remove(publishWithRetained);
-            return true;
-        }
-
-        return false;
-    }
-
-
-    /**
-     * Discards the message if it exists
-     *
-     * @param queueId       queueId
-     * @param shared        if topic is shared
-     * @param messages      all the messages
-     * @param retainedOnly  if the message is to be retained
-     * @return true if a message was discarded, else false
-     */
-    private boolean discardLowestPriority(
-            final @NotNull String queueId,
-            final boolean shared,
-            final @NotNull Messages messages,
-            final boolean retainedOnly
-    ) {
-        PublishWithRetained lowestPrioritizedMessage = getLowestPriorityMessage(
-                messages,
-                retainedOnly
-        );
-
-        if (lowestPrioritizedMessage == null) {
-            return false;
-        } else if (messages.qos0Messages.contains(lowestPrioritizedMessage)) {
-            logAndDecrementPayloadReference(
-                    lowestPrioritizedMessage,
-                    shared,
-                    queueId
-            );
-            messages.qos0Messages.remove(lowestPrioritizedMessage);
-            return true;
-        } else if (messages.qos1Or2Messages.contains(lowestPrioritizedMessage)) {
-            logAndDecrementPayloadReference(
-                    lowestPrioritizedMessage,
-                    shared,
-                    queueId
-            );
-            messages.qos1Or2Messages.remove(lowestPrioritizedMessage);
             return true;
         }
 
@@ -1459,136 +1114,4 @@ public class ClientQueueMemoryLocalPersistence
         }
     }
 
-    /**
-     * Qos1 or Qos2 Message Comparator
-     **/
-
-    static class MessageWithIDComparator implements Comparator<MessageWithID> {
-
-        @Override
-        public int compare(MessageWithID m1, MessageWithID m2) {
-            TopicPriority m1TP = null, m2TP = null;
-
-            if (m1 instanceof PublishWithRetained) {
-                final PublishWithRetained publish = (PublishWithRetained) m1;
-                m1TP = publish.getTopicPriority();
-
-            } else if (m1 instanceof PubrelWithRetained) {
-                System.out.print("this is pubrel" + m1);
-                m1TP = new TopicPriority("pubrel", PriorityClass.ROUTINE, 1000);
-            }
-
-            if (m2 instanceof PublishWithRetained) {
-                final PublishWithRetained publish = (PublishWithRetained) m2;
-                m2TP = publish.getTopicPriority();
-            } else if (m2 instanceof PubrelWithRetained) {
-                System.out.print("this is pubrel" + m2);
-                m2TP = new TopicPriority("pubrel", PriorityClass.ROUTINE, 1000);
-            }
-
-            if (m1TP == null) {
-                return -1;
-            } else if (m2TP == null) {
-                return 1;
-            }
-
-            if (m1TP.getPriorityClass().equals(m2TP.getPriorityClass())) { // same PriorityClass, compare the internal priority
-                return Integer.compare(getPriority(m1TP), getPriority(m2TP));
-            } else { // different PriorityClass, compare them
-                int m1PriorityClassAsInt = getPriorityClassAsInt(m1TP);
-                int m2PriorityClassAsInt = getPriorityClassAsInt(m2TP);
-
-                return Integer.compare(m1PriorityClassAsInt, m2PriorityClassAsInt);
-            }
-        }
-    }
-
-    /**
-     * Qos0 Message Comparator
-     */
-    static class PublishWithRetainedComparator
-            implements Comparator<PublishWithRetained> {
-
-        /**
-         * Compares two PublishWithRetained's to decide which has lowest priority.
-         *
-         * @param p1    as the first PublishWithRetained
-         * @param p2    as the second PublishWithRetained
-         * @return  -1 if p1 has lowest priority,
-         *          0 if they are equal or
-         *          1 if p2 has lowest priority
-         */
-        @Override
-        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
-            TopicPriority p1TP = p1.getTopicPriority();
-            TopicPriority p2TP = p2.getTopicPriority();
-
-            if (p1TP.getPriorityClass().equals(p2TP.getPriorityClass())) { // same PriorityClass, compare the internal priority
-                return Integer.compare(getPriority(p1.getTopicPriority()), getPriority(p2.getTopicPriority()));
-            } else { // different PriorityClass, compare them
-                int p1PcAsInt = getPriorityClassAsInt(p1.getTopicPriority());
-                int p2PcAsInt = getPriorityClassAsInt(p2.getTopicPriority());
-
-                return Integer.compare(p1PcAsInt, p2PcAsInt);
-            }
-
-        }
-
-    }
-
-    static class ReversedPublishWithRetainedComparator implements Comparator<PublishWithRetained> {
-
-        /**
-         * Compares two PublishWithRetained's to decide which has highest priority.
-         *
-         * @param p1    as the first PublishWithRetained
-         * @param p2    as the second PublishWithRetained
-         * @return  -1 if p1 has highest priority,
-         *          0 if they are equal or
-         *          1 if p2 has highest priority
-         */
-        @Override
-        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
-            TopicPriority p1TP = p1.getTopicPriority();
-            TopicPriority p2TP = p2.getTopicPriority();
-
-            if (p1TP.getPriorityClass().equals(p2TP.getPriorityClass())) { // same PriorityClass, compare the internal priority
-                return Integer.compare(getPriority(p2.getTopicPriority()), getPriority(p1.getTopicPriority()));
-            } else { // different PriorityClass, compare them
-                int p1PcAsInt = getPriorityClassAsInt(p1.getTopicPriority());
-                int p2PcAsInt = getPriorityClassAsInt(p2.getTopicPriority());
-
-                return Integer.compare(p2PcAsInt, p1PcAsInt);
-            }
-
-        }
-    }
-
-    static int getPriorityClassAsInt(TopicPriority topicPriority) {
-
-        switch (topicPriority.getPriorityClass()) {
-            case FLASH:
-                return 0;
-            case IMMEDIATE:
-                return 1;
-            case PRIORITY:
-                return 2;
-            case ROUTINE:
-                return 3;
-        }
-        return 4;
-    }
-
-    static int getPriority(TopicPriority topicPriority) {
-        return topicPriority.getPriority();
-    }
-
-    static class PublishWithRetainedTimeComparator
-            implements Comparator<PublishWithRetained> {
-
-        @Override
-        public int compare(PublishWithRetained p1, PublishWithRetained p2) {
-            return Long.compare(p1.getTimestamp(), p2.getTimestamp());
-        }
-    }
 }

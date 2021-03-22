@@ -16,6 +16,4 @@
 
 package com.hivemq.extensions.priority;
 
-public enum PriorityClass {
-    ROUTINE, PRIORITY, IMMEDIATE, FLASH
-}
+public enum PriorityClass { FLASH, IMMEDIATE, PRIORITY, ROUTINE }

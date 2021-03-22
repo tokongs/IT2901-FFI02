@@ -68,8 +68,7 @@ public class PUBLISHFactory {
         @NotNull
         public Mqtt5Builder fromPublish(final @NotNull PUBLISH publish) {
             this.hivemqId = publish.getHivemqId();
-            this.topic = publish.getTopicPriority().getTopicFilter();
-            this.topicPriority = publish.getTopicPriority();
+            this.topic = publish.getTopic();
             this.qoS = publish.getQoS();
             this.payload = publish.getPayload();
             this.retain = publish.isRetain();
@@ -92,11 +91,10 @@ public class PUBLISHFactory {
         public PUBLISH build() {
 
             Preconditions.checkNotNull(hivemqId, "HivemqId may never be null");
-            Preconditions.checkNotNull(topicPriority, "TopicPriority may never be null");
             //Preconditions.checkNotNull(topic, "Topic may never be null");
             Preconditions.checkNotNull(qoS, "Quality of service may never be null");
 
-            return new PUBLISH(hivemqId, topic, topicPriority, payload, qoS, retain, messageExpiryInterval,
+            return new PUBLISH(hivemqId, topic, payload, qoS, retain, messageExpiryInterval,
                     payloadFormatIndicator, contentType, responseTopic, correlationData,
                     userProperties, packetIdentifier, duplicateDelivery, isNewTopicAlias, subscriptionIdentifiers,
                     persistence, timestamp, publishId);
@@ -240,8 +238,7 @@ public class PUBLISHFactory {
         @NotNull
         public Mqtt3Builder fromPublish(final @NotNull PUBLISH publish) {
             this.hivemqId = publish.getHivemqId();
-            this.topic = publish.getTopicPriority().getTopicFilter();
-            this.topicPriority = publish.getTopicPriority();
+            this.topic = publish.getTopic();
             this.qoS = publish.getQoS();
             this.payload = publish.getPayload();
             this.retain = publish.isRetain();
@@ -257,11 +254,10 @@ public class PUBLISHFactory {
         public PUBLISH build() {
 
             Preconditions.checkNotNull(hivemqId, "HivemqId may never be null");
-            Preconditions.checkNotNull(topicPriority, "TopicPriority may never be null");
             Preconditions.checkNotNull(topic, "Topic may never be null");
             Preconditions.checkNotNull(qoS, "Quality of service may never be null");
 
-            return new PUBLISH(hivemqId, topic, topicPriority, payload, qoS, retain,
+            return new PUBLISH(hivemqId, topic, payload, qoS, retain,
                     messageExpiryInterval, persistence, packetIdentifier, duplicateDelivery, publishId, timestamp);
         }
 
