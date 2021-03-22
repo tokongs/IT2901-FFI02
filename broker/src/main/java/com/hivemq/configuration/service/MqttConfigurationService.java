@@ -33,7 +33,7 @@ public interface MqttConfigurationService {
          * This strategy discards the oldest element in the queue if
          * the queue is full.
          */
-        //DISCARD_OLDEST(0),
+        DISCARD_OLDEST(0),
         DISCARD_LOWEST_PRIORITY(0),
         /**
          * This strategy discards the current element to queue in case

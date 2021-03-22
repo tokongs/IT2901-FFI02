@@ -388,7 +388,7 @@ public class ClientQueueMemoryLocalPersistence
                 .collect(Collectors.toList()));
 
         while (!allPublishes.isEmpty()) {
-            final PublishWithRetained publishWithRetained = allPublishes.peek();
+            final PublishWithRetained publishWithRetained = allPublishes.poll();
 
             if (publishWithRetained.getPacketIdentifier() != NO_PACKET_ID) {
                 //already inflight
@@ -396,14 +396,13 @@ public class ClientQueueMemoryLocalPersistence
             }
 
             if(publishWithRetained.getQoS() == QoS.AT_MOST_ONCE  && !PublishUtil.checkExpiry(publishWithRetained.getTimestamp(), publishWithRetained.getMessageExpiryInterval()) ){
-
                     publishes.add(publishWithRetained);
                     messageCount++;
                     bytes += publishWithRetained.getEstimatedSizeInMemory();
+                    continue;
             }
 
             if (PublishUtil.checkExpiry(publishWithRetained.getTimestamp(), publishWithRetained.getMessageExpiryInterval())) {
-                allPublishes.poll();
                 payloadPersistence.decrementReferenceCounter(publishWithRetained.getPublishId());
                 if (publishWithRetained.retained) {
                     messages.retainedQos1Or2Messages--;

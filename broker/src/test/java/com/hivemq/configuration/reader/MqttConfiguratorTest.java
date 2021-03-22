@@ -103,12 +103,12 @@ public class MqttConfiguratorTest extends AbstractConfigurationTest {
         reader.applyConfig();
 
 
-        assertEquals(100, mqttConfigurationService.maxQueuedMessages());
+        assertEquals(1000, mqttConfigurationService.maxQueuedMessages());
         assertEquals(3600, mqttConfigurationService.maxSessionExpiryInterval());
         assertEquals(3600, mqttConfigurationService.maxMessageExpiryInterval());
         assertEquals(120, mqttConfigurationService.serverReceiveMaximum());
         assertEquals(2684, mqttConfigurationService.maxPacketSize());
-        assertEquals(MqttConfigurationService.QueuedMessagesStrategy.DISCARD_LOWEST_PRIORITY, mqttConfigurationService.getQueuedMessagesStrategy());
+        assertEquals(MqttConfigurationService.QueuedMessagesStrategy.DISCARD_OLDEST, mqttConfigurationService.getQueuedMessagesStrategy());
         assertEquals(false, mqttConfigurationService.retainedMessagesEnabled());
         assertEquals(false, mqttConfigurationService.wildcardSubscriptionsEnabled());
         assertEquals(QoS.AT_LEAST_ONCE, mqttConfigurationService.maximumQos());

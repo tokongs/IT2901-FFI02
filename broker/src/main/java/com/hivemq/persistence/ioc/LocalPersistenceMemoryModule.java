@@ -61,8 +61,6 @@ class LocalPersistenceMemoryModule extends SingletonModule<Class<LocalPersistenc
         bindLocalPersistence(ClientQueueLocalPersistence.class,
                 ClientQueueMemoryLocalPersistence.class);
 
-        bind(TopicMatcher.class).to(TokenizedTopicMatcher.class);
-
         bind(PublishComparator.class);
     }
 

@@ -99,6 +99,9 @@ public class LocalPersistenceModuleTest {
     private MqttConfigurationService mqttConfigurationService;
 
     @Mock
+    private TopicPriorityConfigurationService topicPriorityConfigurationService;
+
+    @Mock
     private PersistenceConfigurationService persistenceConfigurationService;
 
     @Mock
@@ -228,6 +231,7 @@ public class LocalPersistenceModuleTest {
                         bind(RestrictionsConfigurationService.class).toInstance(new RestrictionsConfigurationServiceImpl());
                         bind(MqttConfigurationService.class).toInstance(mqttConfigurationService);
                         bind(MqttServerDisconnector.class).toInstance(mock(MqttServerDisconnector.class));
+                        bind(TopicPriorityConfigurationService.class).toInstance(topicPriorityConfigurationService);
                     }
                 });
     }

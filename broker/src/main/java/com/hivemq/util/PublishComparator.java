@@ -28,10 +28,10 @@ import java.util.Optional;
 public class PublishComparator implements Comparator<PUBLISH> {
 
     private final TopicPriorityConfigurationService topicPriorityConfigurationService;
-    private final TopicMatcher topicMatcher;
+    private final TokenizedTopicMatcher topicMatcher;
 
     @Inject
-    public PublishComparator(TopicPriorityConfigurationService topicPriorityConfigurationService, TopicMatcher topicMatcher) {
+    public PublishComparator(TopicPriorityConfigurationService topicPriorityConfigurationService, TokenizedTopicMatcher topicMatcher) {
         this.topicPriorityConfigurationService = topicPriorityConfigurationService;
         this.topicMatcher = topicMatcher;
     }
