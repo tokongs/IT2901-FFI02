@@ -31,7 +31,7 @@ public class TopicPriorityConfigurationServiceImpl implements TopicPriorityConfi
     private static final Logger log = LoggerFactory.getLogger(TopicPriorityConfigurationServiceImpl.class);
 
     /**
-     * The actual topic priority. Maybe make it a COWAL?
+     * The actual topic. Maybe make it a COWAL?
      */
     final List<TopicPriority> priorities = new ArrayList<>();
 

@@ -16,7 +16,6 @@
 package com.hivemq.mqtt.message.dropping;
 
 import com.hivemq.extension.sdk.api.annotations.NotNull;
-import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.logging.EventLog;
 import com.hivemq.metrics.MetricsHolder;
 
@@ -47,7 +46,6 @@ public class MessageDroppedServiceImpl implements MessageDroppedService {
         eventLog.messageDropped(clientId, topic, qos, "The client message queue is full");
     }
 
-
     /**
      * Update the metrics if a message was dropped because the shared subscription message queue was full
      */
@@ -68,7 +66,6 @@ public class MessageDroppedServiceImpl implements MessageDroppedService {
 
         eventLog.messageDropped(clientId, topic, qos, reason);
     }
-
 
     /**
      * Update the metrics if a qos 0 message was dropped because the client socket was not writable
@@ -96,7 +93,6 @@ public class MessageDroppedServiceImpl implements MessageDroppedService {
         metricsHolder.getDroppedMessageCounter().inc();
         eventLog.messageDropped(clientId, topic, qos, "Internal error");
     }
-
 
     @Override
     public void failedShared(final @NotNull String group, final @NotNull String topic, final int qos) {

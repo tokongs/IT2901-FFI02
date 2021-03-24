@@ -98,7 +98,7 @@ public class PUBLISH extends MqttMessageWithUserProperties implements Mqtt3PUBLI
         super(userProperties);
 
         Preconditions.checkNotNull(hivemqId, "HivemqId may never be null");
-        //Preconditions.checkNotNull(topic, "Topic may never be null");
+        Preconditions.checkNotNull(topic, "Topic may never be null");
         Preconditions.checkNotNull(qos, "Quality of service may never be null");
 
         this.topic = topic;

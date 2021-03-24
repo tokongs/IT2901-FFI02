@@ -15,7 +15,6 @@
  */
 package com.hivemq.mqtt.message.publish;
 
-import com.hivemq.extensions.priority.TopicPriority;
 import com.hivemq.mqtt.message.Message;
 import com.hivemq.mqtt.message.QoS;
 

@@ -27,10 +27,8 @@ public class QueuedMessagesConfigEntity {
     @XmlEnum
     @XmlType(name = "strategy")
     public enum QueuedMessagesStrategy {
-        /*@XmlEnumValue("discard-oldest")
-        DISCARD_OLDEST,*/
-        @XmlEnumValue("discard-lowest-priority")
-        DISCARD_LOWEST_PRIORITY,
+        @XmlEnumValue("discard-oldest")
+        DISCARD_OLDEST,
         @XmlEnumValue("discard")
         DISCARD
     }

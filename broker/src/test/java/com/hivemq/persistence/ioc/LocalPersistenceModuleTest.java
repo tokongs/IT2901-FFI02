@@ -99,10 +99,10 @@ public class LocalPersistenceModuleTest {
     private MqttConfigurationService mqttConfigurationService;
 
     @Mock
-    private TopicPriorityConfigurationService topicPriorityConfigurationService;
+    private PersistenceConfigurationService persistenceConfigurationService;
 
     @Mock
-    private PersistenceConfigurationService persistenceConfigurationService;
+    private TopicPriorityConfigurationService topicPriorityConfigurationService;
 
     @Mock
     private Injector persistenceInjector;

@@ -15,9 +15,6 @@
  */
 package com.hivemq.mqtt.message.dropping;
 
-import com.hivemq.configuration.reader.TopicPriorirtyConfigurator;
-import com.hivemq.extensions.priority.TopicPriority;
-
 /**
  * The MessageDroppedService is used to centralize the update of dropped message metrics. The corresponding method
  * should be called, whenever a message is dropped.
@@ -36,18 +33,15 @@ public interface MessageDroppedService {
      */
     void queueFull(final String clientId, final String topic, final int qos);
 
-
     /**
      * Update the metrics if a message was dropped because the shared subscription message queue was full
      */
     void queueFullShared(final String sharedId, final String topic, final int qos);
 
-
     /**
      * Update the metrics if a qos 0 message was dropped because the client socket was not writable
      */
     void notWritable(final String clientId, final String topic, final int qos);
-
 
     /**
      * Update the metrics if a PUBLISH was dropped because an extension prevented onward delivery.
@@ -72,4 +66,5 @@ public interface MessageDroppedService {
     void failedShared(final String group, final String topic, final int qos);
 
     void qos0MemoryExceededShared(final String clientId, final String topic, final int qos, final long currentMemory, final long maxMemory);
+
 }
