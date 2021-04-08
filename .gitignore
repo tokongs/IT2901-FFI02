@@ -7,6 +7,9 @@
 out/
 local.properties
 
+# VS Code Ignores #
+.vscode
+
 # Generic Android ignores #
 ###########################
 bin/
@@ -21,6 +24,10 @@ gen/
 *.exe
 *.o
 *.so
+
+
+# local data #
+broker/src/packaging/data/
 
 # Packages #
 ############
