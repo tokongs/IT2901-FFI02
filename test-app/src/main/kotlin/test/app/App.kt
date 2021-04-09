@@ -8,10 +8,11 @@ import com.github.ajalt.clikt.core.subcommands
 import test.app.commands.Publish
 import test.app.commands.Subscribe
 import test.app.commands.Synthetic
+import test.app.commands.Unsubscribe
 
 class Cli : CliktCommand() {
     override fun run() {
     }
 }
 
-fun main(args: Array<String>) = Cli().subcommands(Publish(), Subscribe(), Synthetic()).main(args)
+fun main(args: Array<String>) = Cli().subcommands(Publish(), Subscribe(), Unsubscribe(), Synthetic()).main(args)
