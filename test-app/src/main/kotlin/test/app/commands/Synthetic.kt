@@ -27,8 +27,8 @@ class Synthetic : CliktCommand(printHelpOnEmptyArgs = true, help = "Put a synthe
     private val save: Boolean by option("-s", "--save", help = "Whether to save or not").flag(default = false)
     private val output: String by option("-o", "--output", help = "File to save data").default( "./log.txt" )
 
-    private val chars = ('a' .. 'z') + ('A' .. 'Z') + ('0' .. '9')
     private fun randomPayload(n: Int): String {
+        val chars = ('a' .. 'z') + ('A' .. 'Z') + ('0' .. '9')
         return List(n) { chars.random() }.joinToString("")
     }
 
@@ -74,14 +74,14 @@ class Synthetic : CliktCommand(printHelpOnEmptyArgs = true, help = "Put a synthe
         echo("Analyzing...")
         received.forEach { (topic, messages) ->
             echo("Results for $topic:")
-            val sumDelay = messages.fold(Duration.ZERO) { acc, message ->
-                acc + Duration.between(message.first, message.second)
+            val sumDelay = messages.fold(Duration.ZERO) { acc, (m1, m2) ->
+                acc + Duration.between(m1, m2)
             }
             val avgDelay = sumDelay.dividedBy(messages.size.toLong())
-            val maxDelay = messages.maxBy {
+            val maxDelay = messages.maxByOrNull {
                 message -> Duration.between(message.first, message.second)
             }
-            val minDelay = messages.maxBy {
+            val minDelay = messages.maxByOrNull {
                     message -> Duration.between(message.first, message.second)
             }
 

@@ -18,6 +18,9 @@ plugins {
 repositories {
     // Use JCenter for resolving dependencies.
     jcenter()
+    maven("https://dl.bintray.com/mipt-npm/dataforge")
+    maven("https://dl.bintray.com/mipt-npm/kscience")
+    maven("https://dl.bintray.com/mipt-npm/dev")
 }
 
 dependencies {
@@ -27,6 +30,9 @@ dependencies {
 
     implementation("com.github.ajalt.clikt:clikt:3.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3")
+
+    implementation("kscience.plotlykt:plotlykt-server:0.3.1")
+
     implementation(project(":client"))
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
