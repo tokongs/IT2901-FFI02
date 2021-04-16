@@ -61,7 +61,7 @@ jobs:
           context: broker
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
           tags: tokongs/ffi02-broker:latest
-          file: broker/docker/Dockerfile 
+          file: broker/docker/Dockerfile
   deploy:
     name: Deploy docker image to server
     runs-on: ubuntu-latest

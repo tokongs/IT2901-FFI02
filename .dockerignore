@@ -1,0 +1,9 @@
+build/
+.idea/
+.gradle/
+.github/
+.gitignore
+.gitmodules
+.gitattributes
+*.md
+LICENSE
