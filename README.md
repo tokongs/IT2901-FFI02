@@ -1,3 +1,8 @@
 # IT2901-FFI02
 
-Iver was here!
+This repository contains the code base for three seperate projects. 
+* An MQTT broker 
+* An MQTT client library 
+* A CLI application for testing puposes
+
+The broker and client library are written in Java and based on [HiveMQ Community Edition](https://github.com/hivemq/hivemq-community-edition) and [HiveMQ MQTT Client](https://github.com/hivemq/hivemq-mqtt-client) respsectively. The CLI application is written in Kotlin and relies heavily on the CLI library [Clikt](https://ajalt.github.io/clikt/).
