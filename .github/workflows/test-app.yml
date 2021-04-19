@@ -41,7 +41,7 @@ jobs:
           images: docker.io/tokongs/ffi02-test-app
           tags: |
             type=sha
-          flavour: |
+          flavor: |
             latest=true
       - name: Build and push
         id: docker_build
