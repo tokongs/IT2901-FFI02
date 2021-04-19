@@ -97,10 +97,12 @@ class Synthetic : CliktCommand(printHelpOnEmptyArgs = true, help = "Put a syntet
                 acc + Duration.between(message.first, message.second)
             }
             val avgDelay = sumDelay.dividedBy(messages.size.toLong())
+            val maxDelay = messages.map { message -> Duration.between(message.first, message.second)}.maxOrNull()
             val numDroppedMessages = numMessages * numPublishersPerTopic - messages.size
             echo("Total number of messages received ${messages.size}")
             echo("Total delay for all messages combined: $sumDelay.")
             echo("Average delay per message: $avgDelay.")
+            echo("Longest delay: $maxDelay.")
             echo("Number of dropped messages $numDroppedMessages")
 
             echo("\n")
