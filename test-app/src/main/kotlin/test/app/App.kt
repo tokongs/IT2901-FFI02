@@ -13,4 +13,4 @@ class Cli : CliktCommand() {
 }
 
 fun main(args: Array<String>) =
-    Cli().subcommands(Publish(), Subscribe(), Unsubscribe(), Synthetic(), Periodic()).main(args)
+    Cli().subcommands(Publish(), Subscribe(), Unsubscribe(), Synthetic(), Periodic(), Analyze()).main(args)

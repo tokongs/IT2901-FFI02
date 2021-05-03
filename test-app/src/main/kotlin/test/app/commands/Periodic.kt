@@ -11,11 +11,11 @@ import com.hivemq.client.mqtt.datatypes.MqttTopicFilter
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import java.time.LocalDateTime
 import java.util.*
 
 class Periodic: CliktCommand(printHelpOnEmptyArgs = true, help = "Publish messages periodically") {
 
-    private val message by argument()
     private val brokerAddress by option("-b", "--broker-address", help = "MQTT Broker address").default("127.0.0.1")
     private val topic by option("-t", "--topic", help = "The topic to publish to").default("")
     private val qos by option("-q", "--qos", help = "Message qos").int().default(0)
@@ -41,7 +41,7 @@ class Periodic: CliktCommand(printHelpOnEmptyArgs = true, help = "Publish messag
         repeat(numMessages){
             client.publishWith()
                 .topic(topic)
-                .payload(message.toByteArray())
+                .payload(LocalDateTime.now().toString().toByteArray())
                 .qos(MqttQos.fromCode(qos) ?: MqttQos.AT_MOST_ONCE)
                 .send()
             echo("Sent ${it+1} of $numMessages messages")
