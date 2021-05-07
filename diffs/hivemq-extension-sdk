@@ -1,0 +1,6 @@
+index 58521ab..62f3273 160000
+--- a/hivemq-extension-sdk
++++ b/hivemq-extension-sdk
+@@ -1 +1 @@
+-Subproject commit 58521ab4a2b7de8d611297078bdd1873d9a8c4b5
++Subproject commit 62f3273da492960871d5d479b581c4dd2ba87fd2

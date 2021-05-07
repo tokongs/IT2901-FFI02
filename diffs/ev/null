@@ -1,0 +1,8 @@
+new file mode 100644
+index 0000000..2f933fa
+--- /dev/null
++++ b/client/jitpack.yml
+@@ -0,0 +1,2 @@
++install:
++  ./gradlew publishToMavenLocal
+\ No newline at end of file
