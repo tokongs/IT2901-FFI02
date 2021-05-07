@@ -1,0 +1,12 @@
+index e5359d8..a5b3e62 100644
+--- a/broker/.gitignore
++++ b/broker/.gitignore
+@@ -12,7 +12,3 @@ out/
+ 
+ .java-version
+ .DS_Store
+-
+-.project
+-.classpath
+-.settings/org.eclipse.buildship.core.prefs
+\ No newline at end of file

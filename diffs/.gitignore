@@ -1,0 +1,78 @@
+deleted file mode 100644
+index 6605872..0000000
+--- a/.gitignore
++++ /dev/null
+@@ -1,73 +0,0 @@
+-# IDEA Ignores #
+-################
+-*.iml
+-*.ipr
+-*.iws
+-.idea/
+-out/
+-local.properties
+-
+-# VS Code Ignores #
+-.vscode
+-
+-# Generic Android ignores #
+-###########################
+-bin/
+-target
+-gen/
+-
+-# Compiled source #
+-###################
+-*.com
+-*.class
+-*.dll
+-*.exe
+-*.o
+-*.so
+-
+-
+-# local data #
+-broker/src/packaging/data/
+-
+-# Packages #
+-############
+-*.7z
+-*.dmg
+-*.gz
+-*.iso
+-*.rar
+-*.tar
+-*.zip
+-
+-# Logs and databases #
+-######################
+-log/
+-*.log
+-*.sql
+-*.sqlite
+-
+-# OS generated files #
+-######################
+-.DS_Store
+-.DS_Store?
+-ehthumbs.db
+-Icon?
+-Thumbs.db
+-
+-# VCS #
+-#######
+-.svn
+-.svn/
+-CVS
+-
+-# XCode 4 #
+-###########
+-*.xcuserstate
+-*.pbxuser
+-*.mode1v3
+-*.mode2v3
+-*.perspectivev3
+-xcuserdata/
+-
+-.gradle
+-build/

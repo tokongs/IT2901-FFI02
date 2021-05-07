@@ -1,0 +1,10 @@
+deleted file mode 100644
+index 1b6985c..0000000
+--- a/test-app/.gitignore
++++ /dev/null
+@@ -1,5 +0,0 @@
+-# Ignore Gradle project-specific cache directory
+-.gradle
+-
+-# Ignore Gradle build output directory
+-build

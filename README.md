@@ -14,3 +14,6 @@ A [user manual](https://github.com/tokongs/IT2901-FFI02/wiki/User-manual) and [d
 The quickest way to get the projects up and running is to run the docker images. For this you'll need to have docker installed. The user manual explains how you would spin up the docker containers. 
 
 The above assumes you don't want to modify the code base. If you want to run and modify the projects locally just clone the repo and use gradle to start the project. JDK 11 or above is a requirement for this to work. You do not need to have gradle installed as gradle is packaged with the source code. 
+
+## Diffs Folder
+The Diffs Folder was made to enable easier viewing of what was done by the group, and what originates for the HiveMQ Community Edition implementation. It largely consists of diffs by file in a somewhat representative folder structure. It was created by diffing the commit in which the HiveMQ client was added to the repository, with latest version of main. From there a simple Haskell script(splitdiffs.hs) in the folder, which chops diffs into their representative files and folders, with roughly representative names. 

@@ -1,0 +1,15 @@
+deleted file mode 100644
+index 7bedcfe..0000000
+--- a/.dockerignore
++++ /dev/null
+@@ -1,9 +0,0 @@
+-build/
+-.idea/
+-.gradle/
+-.github/
+-.gitignore
+-.gitmodules
+-.gitattributes
+-*.md
+-LICENSE
+\ No newline at end of file
