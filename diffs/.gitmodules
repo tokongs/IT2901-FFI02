@@ -1,8 +1,0 @@
-deleted file mode 100644
-index 21266c8..0000000
---- a/.gitmodules
-+++ /dev/null
-@@ -1,3 +0,0 @@
--[submodule "hivemq-extension-sdk"]
--	path = hivemq-extension-sdk
--	url = https://github.com/hivemq/hivemq-extension-sdk

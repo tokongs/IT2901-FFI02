@@ -1,7 +1,0 @@
-deleted file mode 100644
-index 3dd6758..0000000
---- a/broker/src/packaging/third-party-licenses/NOTICE
-+++ /dev/null
-@@ -1 +0,0 @@
--Please have a look at the file licenses in this folder for a complete list of all third party libraries of HiveMQ and their license information.
-\ No newline at end of file

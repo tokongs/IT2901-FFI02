@@ -14,3 +14,6 @@ A [user manual](https://github.com/tokongs/IT2901-FFI02/wiki/User-manual) and [d
 The quickest way to get the projects up and running is to run the docker images. For this you'll need to have docker installed. The user manual explains how you would spin up the docker containers. 
 
 The above assumes you don't want to modify the code base. If you want to run and modify the projects locally just clone the repo and use gradle to start the project. JDK 11 or above is a requirement for this to work. You do not need to have gradle installed as gradle is packaged with the source code. 
+
+## Diffs Folder
+To make it easier to see what's been done by the group, and what originates from the standard HiveMQ
