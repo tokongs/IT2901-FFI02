@@ -1,0 +1,24 @@
+deleted file mode 100644
+index e5359d8..0000000
+--- a/broker/.gitignore
++++ /dev/null
+@@ -1,18 +0,0 @@
+-# Gradle
+-.gradle
+-build/
+-
+-# IntelliJ
+-out/
+-*.iml
+-.idea/*
+-!.idea/codeStyles
+-!.idea/inspectionProfiles
+-!.idea/runConfigurations
+-
+-.java-version
+-.DS_Store
+-
+-.project
+-.classpath
+-.settings/org.eclipse.buildship.core.prefs
+\ No newline at end of file
